@@ -1,0 +1,77 @@
+Course overview:
+
+The main goal is the project.
+- SIG-KDD style 6-8 pages paper report
+- Num studs : 2 (1,3 optional)
+- Topics : application of TDA method on a temporal dataset/s
+- Students who have a temporal problem in their thesis are encourage to work on them
+  after approval
+  Otherwise, the students will implement a published paper -after approval
+- There will be a quiz on the course materials.
+
+
+Regarding the academic paper:
+Format:
+- Abstract
+- Introduction
+- Background
+- Methods
+- Evaluation (research questions, data, evaluation plan)
+- Results
+- Discussion
+
+
+Analytics of data in time - topisc list:
+-Time point series univariate
+- MTD - 
+- Forecasting
+- Clustering
+- Classification
+- Patterns Discovery
++MORE.
+
+GOAL : PROJECT 
+Outcomes : 
+- Intermediate deliverables : 
+-- project proposal in one page (Introduction (motivation), methods, data, evaluation goals)
+-- Lit survey of two pages (with at least 10 refs)
+-- presentation of 10 min (not more than 7 slides)
+   = 3-4 lit survey + 2 project methods + 1 Data + 1 Experimental Plan
+
+-Final Deliverables:
+-- Project report of 6-8 pages in SIG-KDD format
+ = download the format from ACM SIGKDD 2018 CFP
+-- Corresponding presentation of 15 minutes
+
+
+Course Schedule:
+- Nov 3 - Submit Project proposal (1 page) (by email)
+-- Project Proposal in one page (Problem, Methods, Research Questions, Datasets)
+
+- Dec 1 - Quiz 1 + Submit Literature Survey
+-- Quiz 1 (3 questions)
+-- Submit lit survey (the beginning of the report : introduction + background) (can also submit methods + more to get comments)
+
+- Dec 8 - Lit Survey PPTs 
+-- 1 slide : problem / motivation, 3-4 slides : Common methods, 1 slide : your project
+
+- Dec 15 - Lit Survey PPTs 
+
+- Jan 5 - Project PPTs + Quiz 2
+-- Shortened literature ppt + Methods + evaluation (Research questions + experimental plan) + results + discussion / Conclusion
+
+- Jan 12 - Project PPTs
+
+Grading : 
+- 15% - Quiz
+- 75% - Project
+-- 25% lit survey + presentation 
+-- 50% final report in academic paper format + ppt 
+--- 10% originality and innovation
+--- 10% complexity
+--- 20% writing and presentation
+--- 15% soundness and comprehensiveness
+- 10% - Impression
+
+
+
