@@ -1,0 +1,18 @@
+Session - 3 notes 
+Date : 3.11.2021
+
+PAA can be used to convert univariate to multivariate (take mean, med, etc)
+
+- EWD , EFD
+
+(CHI) Persist - identifies tiem intervals that are the longest
+              - greedily search for a matrix having max prob in the diagonal (staying in the same state) as compared to state transition probabilities to other states.
+              
+              - Symmetric Kulback Leibler (SKL) divergence is the metric used for comparing probability transitions.
+              - persistence = see ppt
+              - overall persistence score is the average (over all symbols) persistence of each symbol.
+
+Slideset 2
+
+(CHI) - Sequential mining - in which events have no duration. Only relevant relations are BEFORE and EQUAL.
+- first few slides until Apriori Algo are imp for fundamental understanding of association rule mining
