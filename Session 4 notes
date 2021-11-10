@@ -11,6 +11,24 @@ Slideset - Sequential Mining
 -Closed Patterns
 -- ?!
 
+LIT SURV : 
+
+-domain of problem
+-methods used
+- have a nice split.
+
+QUIZ - is basic.
+
+
+
 Slideset - Time Intervals Mining
 
--
+- go through slides. Too much info to condense into notes.
+
+- in general, you may want to try out different time windows for prediction time windows. ( even for anomaly detection - in anomaly detection - take a time period and flag if a record in it is found to be anomalous)
+- use as features some TIRPs. (in the case of classification) - tirps can be binary (do they exist or not), they can also be used from the perspective of frequencies of occurrence.
+- Allen's temporal logic - 
+- slide 12 VIMP.
+-kam & fu , DaWaK 2000 - they also use Allen's temporal logic
+ -- here, one pattern is represented in many ways - but choose the one that presents the least amount of ambiguity.
+ 
