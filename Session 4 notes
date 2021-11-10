@@ -1,0 +1,16 @@
+11 - 10 - 2021 
+
+Slideset - Sequential Mining
+
+-PrefixSpan
+-- prefixspan is more efficient memorywise (when compared to spade)
+-- to find all the frequent sequential patterns (given a minimum support)
+-- akin to a multi-level hash map (dict) with connected sequences at each level followed by min support hash maps of each of the individual characters
+-- there is no candidate generation
+
+-Closed Patterns
+-- ?!
+
+Slideset - Time Intervals Mining
+
+-
