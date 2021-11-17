@@ -7,4 +7,5 @@ Winarko & Rodick
 
 Papapetrou
  -- 5 allen's relations
+ -- freska - a lookup table that provides the disjunction of 2 relations. Given A and B , Given B and C, use lookup table to get the disjunction between A and C
  
