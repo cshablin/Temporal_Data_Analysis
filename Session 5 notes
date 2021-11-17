@@ -14,3 +14,4 @@ Papapetrou
  -- if we don't use horizontal support, we don't get completeness. 
  -- discovery of all the horizontally supporting instances of a tirp is essential for completeness. - eg  - if a specific patient (entity) gets a specific pattern multiple times and all other patients get the pattern only once, then maybe it's worth checking it out.
  
+ -- issue with tirps time intervals duration ambiguity - reduces the frequency of occurrence when you split based on the durations. A` A`` A```
