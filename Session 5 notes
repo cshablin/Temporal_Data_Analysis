@@ -1,3 +1,10 @@
 17/11/2021 - Session 5
 
 a overlap b - a problematic case where we do not know the actual relationship between the two features.
+
+Winarko & Rodick
+ -- issue with the way the db is parsed - many redundant parses - explodes exponentially with length
+
+Papapetrou
+ -- 5 allen's relations
+ 
