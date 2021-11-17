@@ -11,4 +11,6 @@ Papapetrou
  Karma Lego
  
  -- freska - a lookup table that provides the disjunction of 2 relations. Given A and B , Given B and C, use lookup table to get the disjunction between A and C
+ -- if we don't use horizontal support, we don't get completeness. 
+ -- discovery of all the horizontally supporting instances of a tirp is essential for completeness. - eg  - if a specific patient (entity) gets a specific pattern multiple times and all other patients get the pattern only once, then maybe it's worth checking it out.
  
