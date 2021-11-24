@@ -11,7 +11,7 @@ normalization based on most frequent sax term
 
 10 papers as a minimum (at least 10. I would say 15 is safe)They can also be papers that were presented in class (provided it's relevant to what you're doing in the project)
 look at the first zoom recording to know what should be in the literature survey ppt
-You can also write an introduction (before the lit survey part)
+You can also write the introduction + research questions (before the lit survey part)
 
 Advice for writing papers :
 - Introduction - motivation  + contribution (what you were trying to do new)
@@ -20,4 +20,13 @@ Advice for writing papers :
 - Methods:
 - Evaluation:
   -- Research Questions
+  -- Experimental Design
+  -- Dataset
+  -- Evaluation Metrics
 - Results:
+-Discussion
+
+
+
+
+IEMiner similar to Karmalego but without transitivity
