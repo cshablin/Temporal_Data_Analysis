@@ -3,3 +3,5 @@
 tf normalization - normalize by the most frequent occurring word in the document
 
 sax-vsm - closest centroid becomes the class of the test sample (cosine similarity is used)
+
+why sax and not raw - it generalizes (and also in a way dimensionality reduction)
