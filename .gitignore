@@ -1,0 +1,15 @@
+bin
+obj
+.vs
+*.dll
+*.exe
+*.pdb
+*.user
+*.user
+*.InstallLog
+*.msi
+*.tmp
+*.pyc
+*.log
+.idea/*
+.idea
