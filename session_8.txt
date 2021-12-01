@@ -1,1 +1,4 @@
-1/12/2021
+1/12/2021 - session 8
+
+important for quiz 2 - IEClassifier, GAIN, normalizing term frequency
+
