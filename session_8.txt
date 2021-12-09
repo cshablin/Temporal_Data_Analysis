@@ -1,0 +1,8 @@
+1/12/2021 - session 8
+
+important for quiz 2 - IEClassifier, GAIN, normalizing term frequency
+
+TD4C- optimized cutoffs to create max difference in distribution between each of the levels between classes (greater discriminability). 
+TD4C similar to persist (in terms of cutoff determination - greedy) 
+
+BIDE - criteria is whether the pattern is discriminative between classes (feature selection performed on the fly and the tree is pruned prematurely)
