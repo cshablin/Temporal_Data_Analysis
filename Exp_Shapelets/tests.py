@@ -1,9 +1,11 @@
 import unittest
 import numpy
+import numpy as np
 import pandas as pd
 from gendis.genetic import GeneticExtractor
+from sklearn.model_selection import train_test_split
 
-from Common.data_preparation import split_time_series_data
+from Common.data_preparation import split_time_series_data, split_time_series_with_labels
 
 
 class ShapeletsTestCase(unittest.TestCase):
@@ -25,7 +27,7 @@ class ShapeletsTestCase(unittest.TestCase):
         Name: 1_AIT_001_PV, dtype: float64
         '''
 
-        local_df = self.train_df
+        local_df = self.normal_labels_df
         x_train = split_time_series_data(local_df['1_AIT_001_PV'], 50, 100)
         genetic_extractor = GeneticExtractor(population_size=50, iterations=25, verbose=True,
                                              mutation_prob=0.3, crossover_prob=0.3, max_shaps=9,
@@ -38,6 +40,17 @@ class ShapeletsTestCase(unittest.TestCase):
         except Exception as e :
             print(e)
         self.assertEqual(True, False)
+
+    def test_with_multivariate(self):
+        # self.normal_labels_df['Attack LABLE (1:No Attack, -1:Attack)'] = np.ones(self.normal_labels_df.size)
+        norm_label_multivariate_split_data, norm_y = split_time_series_with_labels(self.normal_labels_df['1_AIT_001_PV', '1_AIT_002_PV'],
+                                                                           np.ones(self.normal_labels_df.size))
+        mixed_label_multivariate_split_data, mixed_y = split_time_series_with_labels(self.mixed_labels_df['1_AIT_001_PV', '1_AIT_002_PV'],
+                                                                            self.mixed_labels_df['Attack LABLE (1:No Attack, -1:Attack)'])
+        # to stack row wise, the multivariate(df.columns) dimension is the third
+        all_multivariate_prepared_x = np.stack((norm_label_multivariate_split_data, mixed_label_multivariate_split_data), axis=0)
+        all_multivariate_y = np.append(norm_y, mixed_y)
+        x_train, x_test, y_train, y_test = train_test_split(all_multivariate_prepared_x, all_multivariate_y, test_size=0.30, random_state=12)
 
     def test_random_shapelets(self):
         from tslearn.generators import random_walk_blobs
@@ -55,7 +68,8 @@ class ShapeletsTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.train_df = pd.read_csv("../Data/Cleaned_Trainset.csv")
+        cls.normal_labels_df = pd.read_csv("../Data/Cleaned_Trainset.csv")
+        cls.mixed_labels_df = pd.read_csv("../Data/Cleaned_Testset.csv")
 
     @classmethod
     def tearDownClass(cls):
