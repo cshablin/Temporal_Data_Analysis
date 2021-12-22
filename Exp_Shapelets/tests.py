@@ -3,8 +3,7 @@ import numpy
 import numpy as np
 import pandas as pd
 from gendis.genetic import GeneticExtractor
-from sklearn.model_selection import train_test_split
-
+from typing import List, Tuple
 from Common.data_preparation import split_time_series_data, split_time_series_with_labels
 
 
@@ -42,20 +41,11 @@ class ShapeletsTestCase(unittest.TestCase):
         self.assertEqual(True, False)
 
     def test_with_multivariate(self):
-        # self.normal_labels_df['Attack LABLE (1:No Attack, -1:Attack)'] = np.ones(self.normal_labels_df.size)
-        norm_label_multivariate_split_data, norm_y = split_time_series_with_labels(self.normal_labels_df['1_AIT_001_PV', '1_AIT_002_PV'],
-                                                                           np.ones(self.normal_labels_df.size))
-        mixed_label_multivariate_split_data, mixed_y = split_time_series_with_labels(self.mixed_labels_df['1_AIT_001_PV', '1_AIT_002_PV'],
-                                                                            self.mixed_labels_df['Attack LABLE (1:No Attack, -1:Attack)'])
-        # to stack row wise, the multivariate(df.columns) dimension is the third
-        all_multivariate_prepared_x = np.stack((norm_label_multivariate_split_data, mixed_label_multivariate_split_data), axis=0)
-        all_multivariate_y = np.append(norm_y, mixed_y)
-        x_train, x_test, y_train, y_test = train_test_split(all_multivariate_prepared_x, all_multivariate_y, test_size=0.30, random_state=12)
+        x_train, x_test, y_train, y_test = self.__prepare_train_test_data(['1_AIT_001_PV', '1_AIT_002_PV'], 500, 1000)
 
     def test_random_shapelets(self):
         from tslearn.generators import random_walk_blobs
         from sklearn.linear_model import LogisticRegression
-        import numpy as np
         np.random.seed(1337)
         X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, noise_level=0.1)
         X = np.reshape(X, (X.shape[0], X.shape[1]))
@@ -65,6 +55,31 @@ class ShapeletsTestCase(unittest.TestCase):
         _ = lr.fit(distances, y)
         lr.score(distances, y)
         self.assertEqual(1, lr.score(distances, y))
+
+    def __prepare_train_test_data(self, columns: List[str], step: int = 500, time_window: int = 1000):
+        # note we can't do split_time_series_with_labels() on combined DF of both dataset as they aren't chronological.
+        mixed_label_multivariate_split_data, mixed_y = split_time_series_with_labels(self.mixed_labels_df[columns],
+                                                                                     self.mixed_labels_df['Attack LABLE (1:No Attack, -1:Attack)'],
+                                                                                     step, time_window)
+        norm_label_multivariate_split_data, norm_y = split_time_series_with_labels(self.normal_labels_df[columns],
+                                                                                   np.ones(self.normal_labels_df.size),
+                                                                                   step, time_window)
+        # number of samples is the third dimension
+        all_multivariate_prepared_x = np.concatenate((norm_label_multivariate_split_data, mixed_label_multivariate_split_data), axis=2)
+        all_multivariate_y = np.append(norm_y, mixed_y)
+        # manual shuffle
+        permutation = np.random.permutation(all_multivariate_prepared_x.shape[2])
+        np.take(all_multivariate_prepared_x, permutation, axis=2, out=all_multivariate_prepared_x)
+        np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
+
+        # split into 2 equal portions
+        all_x_split_arr = np.dsplit(all_multivariate_prepared_x, 2)
+        x_train = all_x_split_arr[0]
+        x_test = all_x_split_arr[1]
+        all_y_split_arr = np.hsplit(all_multivariate_y, 2)
+        y_train = all_y_split_arr[0]
+        y_test = all_y_split_arr[1]
+        return x_train, x_test, y_train, y_test
 
     @classmethod
     def setUpClass(cls):

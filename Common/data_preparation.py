@@ -28,10 +28,22 @@ def split_time_series_with_labels(columns_4_split: pd.DataFrame, labels: np.ndar
     :param labels: column with labels
     :param step: step size in timestamps between adjacent samples
     :param sample_size: also sliding window size
-    :return: x_matrix shaped (~ n_timestamps\\step, sample_size, n_columns), y_vector shaped (~ n_timestamps\\step, 1)
+    :return: x_matrix shaped (sample_size, n_columns, ~ n_timestamps\\step), y_vector shaped (~ n_timestamps\\step,)
     '''
+    import collections
 
     # TODO: smart usage of the scarce negative samples, we can do small steps when arriving to negative sample. This way
     #  we will produce more negative sample in result
+    # Counter({1: 162824, -1: 9977})
     df_np_arr = columns_4_split.values
-    return df_np_arr, labels
+    chunks = []
+    result_labels = []
+    last_index = df_np_arr.shape[0] - 1
+    for index in range(0, last_index, step):
+        if index + sample_size > last_index:
+            break
+        to_index = index + sample_size
+        chunks.append(df_np_arr[index: to_index, :])
+        result_labels.append(labels[to_index])
+    stacked_arrays = np.stack(chunks, axis=2)
+    return stacked_arrays, np.array(result_labels)
