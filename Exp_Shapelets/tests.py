@@ -1,4 +1,6 @@
 import unittest
+import warnings
+
 import numpy
 import numpy as np
 import pandas as pd
@@ -8,6 +10,14 @@ from sklearn.linear_model import LogisticRegression
 from typing import List
 from Common.data_preparation import split_time_series_data, split_time_series_with_labels, \
     split_time_series_with_negative_labels
+
+
+def ignore_warnings(test_func):
+    def do_test(self, *args, **kwargs):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            test_func(self, *args, **kwargs)
+    return do_test
 
 
 class ShapeletsTestCase(unittest.TestCase):
@@ -43,6 +53,7 @@ class ShapeletsTestCase(unittest.TestCase):
             print(e)
         self.assertEqual(True, False)
 
+    @ignore_warnings
     def test_with_multivariate(self):
         columns = ['1_AIT_001_PV', '1_AIT_002_PV']
         step = 500
@@ -66,13 +77,14 @@ class ShapeletsTestCase(unittest.TestCase):
             lr.fit(distances_train, y_train)
             print('Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
 
+    @ignore_warnings
     def test_random_shapelets(self):
         from tslearn.generators import random_walk_blobs
         from sklearn.linear_model import LogisticRegression
         np.random.seed(1337)
         X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, noise_level=0.1)
         X = np.reshape(X, (X.shape[0], X.shape[1]))
-        extractor = GeneticExtractor(iterations=5, population_size=10, location=True)
+        extractor = GeneticExtractor(iterations=5, population_size=10, location=True, n_jobs=1, verbose=True)
         distances = extractor.fit_transform(X, y)
         lr = LogisticRegression()
         _ = lr.fit(distances, y)
