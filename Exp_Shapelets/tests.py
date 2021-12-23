@@ -1,3 +1,4 @@
+import datetime
 import unittest
 import warnings
 
@@ -62,22 +63,27 @@ class ShapeletsTestCase(unittest.TestCase):
         min_negative_last_chunk_size = 5
         x_train, x_test, y_train, y_test = self.__prepare_train_test_data(columns, step, window_length, step4negative, min_negative_last_chunk_size)
         for i in range(len(columns)):
-            print("start GENDIS for column '{0}'".format(columns[i]))
+            print(str(datetime.datetime.now()) + " start GENDIS for column '{0}'".format(columns[i]))
             x_c_train, x_c_test = x_train[:, i, :].T, x_test[:, i, :].T  # shape (x_n_ts, window_length)
             # Fit the GeneticExtractor and construct distance matrix
-            genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=8,
+            genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
                                                  mutation_prob=0.3, crossover_prob=0.3,
                                                  wait=5, max_len=len(x_c_train) // 2)
-            shapelets = genetic_extractor.fit(x_c_train, y_train)
+
+            genetic_extractor.fit(x_c_train, y_train)
+            print(str(datetime.datetime.now()) + ' shapelets ')
+            print(str(datetime.datetime.now()) + ' shapelets # ' + str(len(genetic_extractor.shapelets)) + ' shape ' + str(genetic_extractor.shapelets[0].shape))
             distances_train = genetic_extractor.transform(x_c_train)
+            print(str(datetime.datetime.now()) + ' distances_train')
             distances_test = genetic_extractor.transform(x_c_test)
+            print(str(datetime.datetime.now()) + ' distances_test')
 
             # Fit ML classifier on constructed distance matrix
             lr = LogisticRegression()
             lr.fit(distances_train, y_train)
+            print(str(datetime.datetime.now()) + ' lr.fit')
             print('Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
 
-    @ignore_warnings
     def test_random_shapelets(self):
         from tslearn.generators import random_walk_blobs
         from sklearn.linear_model import LogisticRegression
