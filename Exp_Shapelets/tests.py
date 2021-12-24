@@ -59,8 +59,8 @@ class ShapeletsTestCase(unittest.TestCase):
         columns = ['1_AIT_001_PV', '1_AIT_002_PV']
         step = 500
         window_length = 1000
-        step4negative = 50
-        min_negative_last_chunk_size = 5
+        step4negative = 10
+        min_negative_last_chunk_size = 100
         x_train, x_test, y_train, y_test = self.__prepare_train_test_data(columns, step, window_length, step4negative, min_negative_last_chunk_size)
         for i in range(len(columns)):
             print(str(datetime.datetime.now()) + " start GENDIS for column '{0}'".format(columns[i]))
@@ -82,7 +82,7 @@ class ShapeletsTestCase(unittest.TestCase):
             lr = LogisticRegression()
             lr.fit(distances_train, y_train)
             print(str(datetime.datetime.now()) + ' lr.fit')
-            print('Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
+            print(str(datetime.datetime.now()) + ' Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
 
     def test_random_shapelets(self):
         from tslearn.generators import random_walk_blobs
@@ -121,6 +121,9 @@ class ShapeletsTestCase(unittest.TestCase):
         np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
 
         # split into 2 equal portions
+        if all_multivariate_prepared_x.shape[2] % 2 == 1:
+            all_multivariate_prepared_x = all_multivariate_prepared_x[:, :, :-1]
+            all_multivariate_y = all_multivariate_y[:-1]
         all_x_split_arr = np.dsplit(all_multivariate_prepared_x, 2)
         x_train = all_x_split_arr[0]
         x_test = all_x_split_arr[1]
