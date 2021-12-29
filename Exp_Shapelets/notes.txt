@@ -1,0 +1,3 @@
+- noticed columns with higher std are much more effective for shapelets performance
+  for example (same configuration 1000 window..) '1_AIT_001_PV' has 18.66 std achieved ~ 70% acc, '1_AIT_002_PV' has 0.35 std achieved ~ 62% acc
+  so for feature selection we could discard columns with low std
