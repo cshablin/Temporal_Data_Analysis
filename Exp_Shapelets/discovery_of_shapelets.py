@@ -1,4 +1,7 @@
+import datetime
 import os
+from queue import Queue, Empty
+from threading import Thread
 
 import pandas as pd
 import numpy as np
@@ -24,6 +27,9 @@ class MultiVarShapeletsExtractor:
         self.normal_labels_test_df = normal_labels_test_df
         self.mixed_labels_train_df = mixed_labels_train_df
         self.mixed_labels_test_df = mixed_labels_test_df
+        self.col_jobs_q = Queue()
+        self.n_threads = 4
+        self.shapelets_threads = []
 
     def prepare_data(self):
         columns = list(set(list(self.normal_labels_train_df.columns)) - set(self.almost_const_columns + self.invalid_columns))
@@ -40,13 +46,17 @@ class MultiVarShapeletsExtractor:
         self.__save(y_train, 'y_train')
         self.__save(x_test, 'x_test')
         self.__save(y_test, 'y_test')
+        for i in range(len(columns)):
+            self.col_jobs_q.put((i, columns[i]))
+        for i in range(self.n_threads):
+            self.shapelets_threads.append(UniVarShapeletsExtractor(self.config, self.col_jobs_q, x_train, y_train))
 
     def __save(self, arr: np.ndarray, file_name):
         np.save(self.config.test_folder + os.path.sep + file_name, arr)
 
-    def run(self):
-        pass
-        # constant_value_columns = list(set(constant_value_columns) - set(in_train_not_in_test_const_col))
+    def discover_shapelets(self):
+        for th in self.shapelets_threads:
+            th.start()
 
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
                            columns: List[str], step: int = 500, time_window: int = 1000,
@@ -73,6 +83,40 @@ class MultiVarShapeletsExtractor:
         np.take(all_multivariate_prepared_x, permutation, axis=2, out=all_multivariate_prepared_x)
         np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
         return all_multivariate_prepared_x, all_multivariate_y
+
+
+class UniVarShapeletsExtractor(Thread):
+    def __init__(self, config: ShapeletsConfig, queue: Queue, x_train: np.ndarray, y_train: np.ndarray):
+        super(UniVarShapeletsExtractor, self).__init__()
+        self.config = config
+        self.queue = queue
+        self.x_train = x_train
+        self.y_train = y_train
+
+    def run(self) -> None:
+        while not self.queue.empty():
+            try:
+                column_job = self.queue.get_nowait()
+                print(str(datetime.datetime.now()) + " start  column '{0}'".format(column_job[1]))
+                col_folder = self.config.test_folder + os.path.sep + column_job[1]
+                os.makedirs(col_folder)
+                self.extract_shapelets(column_job[0], col_folder)
+                print(str(datetime.datetime.now()) + " Done   column '{0}'".format(column_job[1]))
+            except Empty:
+                pass
+
+    def extract_shapelets(self, column: int, col_folder: str):
+        x_c_train = self.x_train[:, column, :].T  # shape (x_n_ts, window_length)
+        # Fit the GeneticExtractor and construct distance matrix
+        genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
+                                             mutation_prob=0.3, crossover_prob=0.3,
+                                             wait=5, max_len=len(x_c_train) // 2, location=True)
+
+        genetic_extractor.fit(x_c_train, self.y_train)
+        distances_train = genetic_extractor.transform(x_c_train)
+        np.save(col_folder + os.path.sep + 'distances_train', distances_train)
+        genetic_extractor.save(col_folder + os.path.sep + 'model.p')
+        # new_extractor = GeneticExtractor.load('temp.p')
 
 
 # # Read in the datafiles

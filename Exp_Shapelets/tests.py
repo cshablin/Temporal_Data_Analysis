@@ -202,6 +202,7 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
         multi_var_shape_extractor.prepare_data()
+        multi_var_shape_extractor.discover_shapelets()
 
     @classmethod
     def setUpClass(cls):
