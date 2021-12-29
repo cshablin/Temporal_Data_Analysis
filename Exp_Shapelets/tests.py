@@ -1,4 +1,5 @@
 import datetime
+import os
 import unittest
 import warnings
 
@@ -11,6 +12,8 @@ from sklearn.linear_model import LogisticRegression
 from typing import List
 from Common.data_preparation import split_time_series_data, split_time_series_with_labels, \
     split_time_series_with_negative_labels
+from Exp_Shapelets.Config import ShapeletsConfig
+from Exp_Shapelets.discovery_of_shapelets import MultiVarShapeletsExtractor
 
 
 def ignore_warnings(test_func):
@@ -132,10 +135,86 @@ class ShapeletsTestCase(unittest.TestCase):
         y_test = all_y_split_arr[1]
         return x_train, x_test, y_train, y_test
 
+    @ignore_warnings
+    def test_with_multivariate_and_save_transformed(self):
+        columns = ['1_AIT_001_PV', '1_AIT_002_PV']
+        step = 500
+        window_length = 1000
+        step4negative = 5
+        min_negative_last_chunk_size = 100
+        x_train, y_train = self.__prepare_x_y_data(self.normal_labels_train_df, self.mixed_labels_train_df,
+                                                   columns, step, window_length, step4negative, min_negative_last_chunk_size)
+        x_test, y_test = self.__prepare_x_y_data(self.normal_labels_test_df, self.mixed_labels_test_df,
+                                                 columns, step, window_length, step4negative, min_negative_last_chunk_size)
+        for i in range(len(columns)):
+            print(str(datetime.datetime.now()) + " start GENDIS for column '{0}'".format(columns[i]))
+            x_c_train, x_c_test = x_train[:, i, :].T, x_test[:, i, :].T  # shape (x_n_ts, window_length)
+            # Fit the GeneticExtractor and construct distance matrix
+            genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
+                                                 mutation_prob=0.3, crossover_prob=0.3,
+                                                 wait=5, max_len=len(x_c_train) // 2)
+
+            genetic_extractor.fit(x_c_train, y_train)
+            print(str(datetime.datetime.now()) + ' shapelets ')
+            print(str(datetime.datetime.now()) + ' shapelets # ' + str(len(genetic_extractor.shapelets)) + ' shape ' + str(genetic_extractor.shapelets[0].shape))
+            distances_train = genetic_extractor.transform(x_c_train)
+            print(str(datetime.datetime.now()) + ' distances_train')
+            distances_test = genetic_extractor.transform(x_c_test)
+            print(str(datetime.datetime.now()) + ' distances_test')
+
+            # Fit ML classifier on constructed distance matrix
+            lr = LogisticRegression()
+            lr.fit(distances_train, y_train)
+            print(str(datetime.datetime.now()) + ' lr.fit')
+            print(str(datetime.datetime.now()) + ' Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
+
+    def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
+                           columns: List[str], step: int = 500, time_window: int = 1000,
+                           step4negative: int = 5, min_negative_last_chunk_size: int = 20):
+        negative_label_multivariate_split_data, neg_y = split_time_series_with_negative_labels(mixed_df[columns],
+                                                                                               mixed_df['Attack LABLE (1:No Attack, -1:Attack)'].values,
+                                                                                               step4negative, time_window, min_negative_last_chunk_size)
+
+        # note we can't do split_time_series_with_labels() on combined DF of both dataset as they aren't chronological.
+        mixed_label_multivariate_split_data, mixed_y = split_time_series_with_labels(mixed_df[columns],
+                                                                                     mixed_df['Attack LABLE (1:No Attack, -1:Attack)'].values,
+                                                                                     step, time_window)
+        norm_label_multivariate_split_data, norm_y = split_time_series_with_labels(normal_df[columns],
+                                                                                   np.ones(normal_df.shape[0]),
+                                                                                   step, time_window)
+        # number of samples is the third dimension
+        all_multivariate_prepared_x = np.concatenate((norm_label_multivariate_split_data,
+                                                      mixed_label_multivariate_split_data,
+                                                      negative_label_multivariate_split_data), axis=2)
+        all_multivariate_y = np.concatenate((norm_y, mixed_y, neg_y), axis=0)
+        # manual shuffle
+        np.random.seed(123)
+        permutation = np.random.permutation(all_multivariate_prepared_x.shape[2])
+        np.take(all_multivariate_prepared_x, permutation, axis=2, out=all_multivariate_prepared_x)
+        np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
+        return all_multivariate_prepared_x, all_multivariate_y
+
+    def test_with_multivariate_and_save_transformed_2(self):
+
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_1")
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+        multi_var_shape_extractor.prepare_data()
+
     @classmethod
     def setUpClass(cls):
         cls.normal_labels_df = pd.read_csv("../Data/Cleaned_Trainset.csv")
+        normal_df_mid_point = int(cls.normal_labels_df.shape[0] / 2)
         cls.mixed_labels_df = pd.read_csv("../Data/Cleaned_Testset.csv")
+        mixed_df_mid_point = int(cls.mixed_labels_df.shape[0] / 2)
+
+        cls.normal_labels_train_df = cls.normal_labels_df[:normal_df_mid_point]
+        cls.normal_labels_test_df = cls.normal_labels_df[normal_df_mid_point + 1:]
+
+        cls.mixed_labels_train_df = cls.mixed_labels_df[:mixed_df_mid_point]
+        cls.mixed_labels_test_df = cls.mixed_labels_df[mixed_df_mid_point + 1:]
 
     @classmethod
     def tearDownClass(cls):
