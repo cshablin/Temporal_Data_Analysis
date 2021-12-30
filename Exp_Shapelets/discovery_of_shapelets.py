@@ -28,11 +28,12 @@ class MultiVarShapeletsExtractor:
         self.mixed_labels_train_df = mixed_labels_train_df
         self.mixed_labels_test_df = mixed_labels_test_df
         self.col_jobs_q = Queue()
-        self.n_threads = 4
+        self.n_threads = 1
         self.shapelets_threads = []
 
-    def prepare_data(self):
-        columns = list(set(list(self.normal_labels_train_df.columns)) - set(self.almost_const_columns + self.invalid_columns))
+    def prepare_data(self, use_columns: List[str]):
+        # columns = list(set(list(self.normal_labels_train_df.columns)) - set(self.almost_const_columns + self.invalid_columns ))
+        columns = list(set(list(use_columns)) - set(self.almost_const_columns + self.invalid_columns))
         step = self.config.step
         window_length = self.config.window_length
         step4negative = self.config.step4negative
@@ -52,7 +53,9 @@ class MultiVarShapeletsExtractor:
             self.shapelets_threads.append(UniVarShapeletsExtractor(self.config, self.col_jobs_q, x_train, y_train))
 
     def __save(self, arr: np.ndarray, file_name):
-        np.save(self.config.test_folder + os.path.sep + file_name, arr)
+        file_path = self.config.test_folder + os.path.sep + file_name
+        if not os.path.exists(file_path):
+            np.save(file_path, arr)
 
     def discover_shapelets(self):
         for th in self.shapelets_threads:
@@ -99,6 +102,9 @@ class UniVarShapeletsExtractor(Thread):
                 column_job = self.queue.get_nowait()
                 print(str(datetime.datetime.now()) + " start  column '{0}'".format(column_job[1]))
                 col_folder = self.config.test_folder + os.path.sep + column_job[1]
+                if os.path.exists(col_folder):
+                    print("Skipping handling column {0}".format(column_job[1]))
+                    continue
                 os.makedirs(col_folder)
                 self.extract_shapelets(column_job[0], col_folder)
                 print(str(datetime.datetime.now()) + " Done   column '{0}'".format(column_job[1]))

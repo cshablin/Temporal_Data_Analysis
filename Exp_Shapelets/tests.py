@@ -196,12 +196,20 @@ class ShapeletsTestCase(unittest.TestCase):
 
     def test_with_multivariate_and_save_transformed_2(self):
 
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_1")
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_2")
+        conf.step = 250
+        conf.window_length = 500
+        conf.min_negative_last_chunk_size = 50
+        conf.population_size = 5
+        conf.iterations = 5
+        conf.wait = 3
+        conf.update()
         multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
                                                                self.mixed_labels_train_df,
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
-        multi_var_shape_extractor.prepare_data()
+
+        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns[3:12]))
         multi_var_shape_extractor.discover_shapelets()
 
     @classmethod
