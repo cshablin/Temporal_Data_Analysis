@@ -28,6 +28,7 @@ class ShapeletsConfig:
     mutation_prob = 0.3
     crossover_prob = 0.3
     wait = 5
+    normed = True
 
     LOGGING_LEVEL = 20
     # CRITICAL = 50

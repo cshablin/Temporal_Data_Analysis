@@ -18,7 +18,7 @@ class MultiVarShapeletsExtractor:
     almost_const_columns = ['2_LS_101_AH',	'2_LS_101_AL',	'2_LS_201_AH',	'2_LS_201_AL',	'2_LS_301_AH',	'2_LS_301_AL',
                             '2_LS_401_AH',	'2_LS_401_AL',	'2_LS_501_AH',	'2_LS_501_AL',	'2_LS_601_AH', '2_LS_601_AL',
                             '2_PIC_003_SP', '3_AIT_001_PV', '1_MV_004_STATUS']
-    invalid_columns = ['Unnamed: 0', 'Date', 'Time']
+    invalid_columns = ['Unnamed: 0', 'Date', 'Date ', 'Time', 'Attack LABLE (1:No Attack, -1:Attack)']
 
     def __init__(self, conf: ShapeletsConfig, normal_labels_train_df: pd.DataFrame, mixed_labels_train_df: pd.DataFrame,
                  normal_labels_test_df: pd.DataFrame, mixed_labels_test_df: pd.DataFrame):
@@ -31,9 +31,9 @@ class MultiVarShapeletsExtractor:
         self.n_threads = 1
         self.shapelets_threads = []
 
-    def prepare_data(self, use_columns: List[str]):
+    def prepare_data(self, shapelets_columns: List[str]):
         # columns = list(set(list(self.normal_labels_train_df.columns)) - set(self.almost_const_columns + self.invalid_columns ))
-        columns = list(set(list(use_columns)) - set(self.almost_const_columns + self.invalid_columns))
+        columns = list(set(list(shapelets_columns)) - set(self.almost_const_columns + self.invalid_columns))
         step = self.config.step
         window_length = self.config.window_length
         step4negative = self.config.step4negative
@@ -42,11 +42,11 @@ class MultiVarShapeletsExtractor:
                                                    columns, step, window_length, step4negative, min_negative_last_chunk_size)
         x_test, y_test = self.__prepare_x_y_data(self.normal_labels_test_df, self.mixed_labels_test_df,
                                                  columns, step, window_length, step4negative, min_negative_last_chunk_size)
-        self.__save(np.array(columns), 'columns')
-        self.__save(x_train, 'x_train')
-        self.__save(y_train, 'y_train')
-        self.__save(x_test, 'x_test')
-        self.__save(y_test, 'y_test')
+        self.__save(np.array(columns), 'columns.npy')
+        self.__save(x_train, 'x_train.npy')
+        self.__save(y_train, 'y_train.npy')
+        self.__save(x_test, 'x_test.npy')
+        self.__save(y_test, 'y_test.npy')
         for i in range(len(columns)):
             self.col_jobs_q.put((i, columns[i]))
         for i in range(self.n_threads):
@@ -57,9 +57,27 @@ class MultiVarShapeletsExtractor:
         if not os.path.exists(file_path):
             np.save(file_path, arr)
 
+    def __load(self, file_name) -> np.ndarray:
+        file_path = self.config.test_folder + os.path.sep + file_name
+        return np.load(file_path)
+
     def discover_shapelets(self):
         for th in self.shapelets_threads:
             th.start()
+
+    # this should be called after finished extracting shapelets for all columns
+    def train_classifier(self):
+        y_train = self.__load('y_train.npy')
+        ordered_columns = self.__load('columns.npy')
+        for i in range(len(ordered_columns)):
+            col_str = ordered_columns[i]
+            pass
+            distances_train = genetic_extractor.transform(X_train)
+            distances_test = genetic_extractor.transform(X_test)
+
+        # Fit ML classifier on constructed distance matrix
+        lr = LogisticRegression()
+        lr.fit(distances_train, y_train)
 
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
                            columns: List[str], step: int = 500, time_window: int = 1000,
@@ -114,9 +132,10 @@ class UniVarShapeletsExtractor(Thread):
     def extract_shapelets(self, column: int, col_folder: str):
         x_c_train = self.x_train[:, column, :].T  # shape (x_n_ts, window_length)
         # Fit the GeneticExtractor and construct distance matrix
-        genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
-                                             mutation_prob=0.3, crossover_prob=0.3,
-                                             wait=5, max_len=len(x_c_train) // 2, location=True)
+        genetic_extractor = GeneticExtractor(population_size=self.config.population_size, iterations=self.config.iterations,
+                                             verbose=self.config.verbose, n_jobs=1, mutation_prob=self.config.mutation_prob,
+                                             crossover_prob=self.config.crossover_prob, normed=self.config.normed,
+                                             wait=self.config.wait, max_len=len(x_c_train) // 2, location=True)
 
         genetic_extractor.fit(x_c_train, self.y_train)
         distances_train = genetic_extractor.transform(x_c_train)

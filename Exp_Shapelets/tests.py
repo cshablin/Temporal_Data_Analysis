@@ -70,7 +70,7 @@ class ShapeletsTestCase(unittest.TestCase):
             x_c_train, x_c_test = x_train[:, i, :].T, x_test[:, i, :].T  # shape (x_n_ts, window_length)
             # Fit the GeneticExtractor and construct distance matrix
             genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
-                                                 mutation_prob=0.3, crossover_prob=0.3,
+                                                 mutation_prob=0.3, crossover_prob=0.3, normed=True,
                                                  wait=5, max_len=len(x_c_train) // 2)
 
             genetic_extractor.fit(x_c_train, y_train)
@@ -196,20 +196,22 @@ class ShapeletsTestCase(unittest.TestCase):
 
     def test_with_multivariate_and_save_transformed_2(self):
 
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_2")
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3")
         conf.step = 250
         conf.window_length = 500
         conf.min_negative_last_chunk_size = 50
         conf.population_size = 5
-        conf.iterations = 5
-        conf.wait = 3
+        conf.iterations = 10
+        conf.wait = 5
+        conf.normed = True
         conf.update()
         multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
                                                                self.mixed_labels_train_df,
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns[3:12]))
+        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns[3:13]))
+        # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
 
     @classmethod
