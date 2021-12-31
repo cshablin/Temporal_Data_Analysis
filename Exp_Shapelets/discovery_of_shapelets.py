@@ -17,7 +17,7 @@ from Exp_Shapelets.Config import ShapeletsConfig
 class MultiVarShapeletsExtractor:
     almost_const_columns = ['2_LS_101_AH',	'2_LS_101_AL',	'2_LS_201_AH',	'2_LS_201_AL',	'2_LS_301_AH',	'2_LS_301_AL',
                             '2_LS_401_AH',	'2_LS_401_AL',	'2_LS_501_AH',	'2_LS_501_AL',	'2_LS_601_AH', '2_LS_601_AL',
-                            '2_PIC_003_SP', '3_AIT_001_PV']
+                            '2_PIC_003_SP', '3_AIT_001_PV', '1_MV_004_STATUS']
     invalid_columns = ['Unnamed: 0', 'Date', 'Time']
 
     def __init__(self, conf: ShapeletsConfig, normal_labels_train_df: pd.DataFrame, mixed_labels_train_df: pd.DataFrame,
