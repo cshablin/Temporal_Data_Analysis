@@ -210,9 +210,20 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns[3:13]))
+        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns[3:18]))
         # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
+
+    def test_with_multivariate_train_test_classifier_with_transformed(self):
+
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_xxx")
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+
+        # run train only after all the columns shapelets are done and saved test folder
+        multi_var_shape_extractor.train_classifier()
 
     @classmethod
     def setUpClass(cls):

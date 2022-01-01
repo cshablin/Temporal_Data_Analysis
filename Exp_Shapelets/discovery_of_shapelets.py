@@ -7,8 +7,9 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Tuple, List, Any
 from gendis.genetic import GeneticExtractor
+from sklearn.base import BaseEstimator
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 
 from Common.data_preparation import split_time_series_with_labels, split_time_series_with_negative_labels
 from Exp_Shapelets.Config import ShapeletsConfig
@@ -50,7 +51,7 @@ class MultiVarShapeletsExtractor:
         for i in range(len(columns)):
             self.col_jobs_q.put((i, columns[i]))
         for i in range(self.n_threads):
-            self.shapelets_threads.append(UniVarShapeletsExtractor(self.config, self.col_jobs_q, x_train, y_train))
+            self.shapelets_threads.append(UniVarShapeletsExtractor(self.config, self.col_jobs_q, x_train, y_train, x_test))
 
     def __save(self, arr: np.ndarray, file_name):
         file_path = self.config.test_folder + os.path.sep + file_name
@@ -67,17 +68,38 @@ class MultiVarShapeletsExtractor:
 
     # this should be called after finished extracting shapelets for all columns
     def train_classifier(self):
+        x_train = self.__load('x_train.npy')
+        x_test = self.__load('x_test.npy')
         y_train = self.__load('y_train.npy')
+        y_test = self.__load('y_test.npy')
+
         ordered_columns = self.__load('columns.npy')
-        for i in range(len(ordered_columns)):
-            col_str = ordered_columns[i]
-            pass
-            distances_train = genetic_extractor.transform(X_train)
-            distances_test = genetic_extractor.transform(X_test)
+        x_multi_var_distances_train = None
+        x_multi_var_distances_test = None
+        for i_col in range(len(ordered_columns)):
+            col_str = ordered_columns[i_col]
+            column_folder = self.config.test_folder + os.path.sep + col_str + os.path.sep
+            distances_c_train = np.load(column_folder + 'distances_train.npy')
+            distances_c_test = np.load(column_folder + 'distances_test.npy')
+            # genetic_extractor = GeneticExtractor.load(column_folder + 'model.p')
+            # column_slice_x = x_train[:, i_col, :]
+            # distances_c_train_ = genetic_extractor.transform(column_slice_x.T)  # shape (x_n_ts, window_length)
+            print('start Transform for column ' + str())
+            # distances_c_test = genetic_extractor.transform(x_test[:, i_col, :].T)  # shape (x_n_ts, window_length)
+            # assert distances_c_train_ == distances_c_train
+            if i_col == 0:
+                x_multi_var_distances_train = distances_c_train
+                x_multi_var_distances_test = distances_c_test
+                continue
+            x_multi_var_distances_train = np.concatenate((x_multi_var_distances_train, distances_c_train), axis=1)
+            x_multi_var_distances_test = np.concatenate((x_multi_var_distances_test, distances_c_test), axis=1)
 
         # Fit ML classifier on constructed distance matrix
         lr = LogisticRegression()
-        lr.fit(distances_train, y_train)
+        lr.fit(x_multi_var_distances_train, y_train)
+        self.__save_clf(lr, 'LogisticRegression')
+        print('report = \n{}'.format(classification_report(y_test, lr.predict(x_multi_var_distances_test), labels=['attack', 'normal'])))
+
 
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
                            columns: List[str], step: int = 500, time_window: int = 1000,
@@ -105,14 +127,20 @@ class MultiVarShapeletsExtractor:
         np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
         return all_multivariate_prepared_x, all_multivariate_y
 
+    def __save_clf(self, clf: BaseEstimator, name: str):
+        from joblib import dump, load
+        file_path = self.config.test_folder + os.path.sep + name + '.joblib'
+        dump(clf, file_path)
+
 
 class UniVarShapeletsExtractor(Thread):
-    def __init__(self, config: ShapeletsConfig, queue: Queue, x_train: np.ndarray, y_train: np.ndarray):
+    def __init__(self, config: ShapeletsConfig, queue: Queue, x_train: np.ndarray, y_train: np.ndarray, x_test: np.ndarray):
         super(UniVarShapeletsExtractor, self).__init__()
         self.config = config
         self.queue = queue
         self.x_train = x_train
         self.y_train = y_train
+        self.x_test = x_test
 
     def run(self) -> None:
         while not self.queue.empty():
@@ -131,6 +159,7 @@ class UniVarShapeletsExtractor(Thread):
 
     def extract_shapelets(self, column: int, col_folder: str):
         x_c_train = self.x_train[:, column, :].T  # shape (x_n_ts, window_length)
+        x_c_test = self.x_test[:, column, :].T  # shape (x_n_ts, window_length)
         # Fit the GeneticExtractor and construct distance matrix
         genetic_extractor = GeneticExtractor(population_size=self.config.population_size, iterations=self.config.iterations,
                                              verbose=self.config.verbose, n_jobs=1, mutation_prob=self.config.mutation_prob,
@@ -140,6 +169,8 @@ class UniVarShapeletsExtractor(Thread):
         genetic_extractor.fit(x_c_train, self.y_train)
         distances_train = genetic_extractor.transform(x_c_train)
         np.save(col_folder + os.path.sep + 'distances_train', distances_train)
+        distances_test = genetic_extractor.transform(x_c_test)
+        np.save(col_folder + os.path.sep + 'distances_test', distances_test)
         genetic_extractor.save(col_folder + os.path.sep + 'model.p')
         # new_extractor = GeneticExtractor.load('temp.p')
 
