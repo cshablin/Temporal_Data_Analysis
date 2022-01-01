@@ -210,20 +210,26 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns[3:18]))
+        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
         # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
 
     def test_with_multivariate_train_test_classifier_with_transformed(self):
 
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_xxx")
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3")
         multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
                                                                self.mixed_labels_train_df,
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        # run train only after all the columns shapelets are done and saved test folder
-        multi_var_shape_extractor.train_classifier()
+        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet',
+                                                                           solver='saga', l1_ratio=0.1))
+
+        # for i in range(20):
+        #     l1_ratio = 0.05 + (i * 0.005)
+        #     print('l1_ratio', l1_ratio)
+        #     multi_var_shape_extractor.train_classifier(LogisticRegression(max_iter=1000, tol=1e-4,
+        #                                                               penalty='elasticnet', solver='saga', l1_ratio=l1_ratio))
 
     @classmethod
     def setUpClass(cls):

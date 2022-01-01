@@ -8,7 +8,7 @@ import numpy as np
 from typing import Dict, Tuple, List, Any
 from gendis.genetic import GeneticExtractor
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score, classification_report
 
 from Common.data_preparation import split_time_series_with_labels, split_time_series_with_negative_labels
@@ -67,9 +67,7 @@ class MultiVarShapeletsExtractor:
             th.start()
 
     # this should be called after finished extracting shapelets for all columns
-    def train_classifier(self):
-        x_train = self.__load('x_train.npy')
-        x_test = self.__load('x_test.npy')
+    def train_test_classifier(self, clf, columns: List[str] = None):
         y_train = self.__load('y_train.npy')
         y_test = self.__load('y_test.npy')
 
@@ -84,7 +82,6 @@ class MultiVarShapeletsExtractor:
             # genetic_extractor = GeneticExtractor.load(column_folder + 'model.p')
             # column_slice_x = x_train[:, i_col, :]
             # distances_c_train_ = genetic_extractor.transform(column_slice_x.T)  # shape (x_n_ts, window_length)
-            print('start Transform for column ' + str())
             # distances_c_test = genetic_extractor.transform(x_test[:, i_col, :].T)  # shape (x_n_ts, window_length)
             # assert distances_c_train_ == distances_c_train
             if i_col == 0:
@@ -94,11 +91,12 @@ class MultiVarShapeletsExtractor:
             x_multi_var_distances_train = np.concatenate((x_multi_var_distances_train, distances_c_train), axis=1)
             x_multi_var_distances_test = np.concatenate((x_multi_var_distances_test, distances_c_test), axis=1)
 
-        # Fit ML classifier on constructed distance matrix
-        lr = LogisticRegression()
-        lr.fit(x_multi_var_distances_train, y_train)
-        self.__save_clf(lr, 'LogisticRegression')
-        print('report = \n{}'.format(classification_report(y_test, lr.predict(x_multi_var_distances_test), labels=['attack', 'normal'])))
+        x_multi_var_distances_train = normalize(x_multi_var_distances_train, axis=1, norm='max')
+        # Fit ML classifier on constructed (distance,location) matrix
+        clf.fit(x_multi_var_distances_train, y_train)
+        self.__save_clf(clf, clf.__class__.__name__)
+        print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
+        # print('report = \n{}'.format(classification_report(y_test, lr.predict(x_multi_var_distances_test), labels=['attack', 'normal'])))
 
 
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
