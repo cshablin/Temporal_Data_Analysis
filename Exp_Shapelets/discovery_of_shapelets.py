@@ -67,7 +67,7 @@ class MultiVarShapeletsExtractor:
             th.start()
 
     # this should be called after finished extracting shapelets for all columns
-    def train_test_classifier(self, clf, columns: List[str] = None):
+    def train_test_classifier(self, clf, normalize_columns: str = None, columns: List[str] = None):
         y_train = self.__load('y_train.npy')
         y_test = self.__load('y_test.npy')
 
@@ -90,13 +90,13 @@ class MultiVarShapeletsExtractor:
                 continue
             x_multi_var_distances_train = np.concatenate((x_multi_var_distances_train, distances_c_train), axis=1)
             x_multi_var_distances_test = np.concatenate((x_multi_var_distances_test, distances_c_test), axis=1)
-
-        x_multi_var_distances_train = normalize(x_multi_var_distances_train, axis=1, norm='max')
+        if normalize_columns is not None:
+            x_multi_var_distances_train = normalize(x_multi_var_distances_train, axis=1, norm=normalize_columns)
         # Fit ML classifier on constructed (distance,location) matrix
         clf.fit(x_multi_var_distances_train, y_train)
         self.__save_clf(clf, clf.__class__.__name__)
-        print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
-        # print('report = \n{}'.format(classification_report(y_test, lr.predict(x_multi_var_distances_test), labels=['attack', 'normal'])))
+        # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
+        print('report = \n{}'.format(classification_report(y_test, clf.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
 
 
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
