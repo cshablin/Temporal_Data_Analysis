@@ -26,6 +26,8 @@ def ignore_warnings(test_func):
 
 class ShapeletsTestCase(unittest.TestCase):
 
+    all_train_columns = ['1_LT_001_PV', '2_PIT_001_PV', '3_AIT_005_PV', '2_FIC_401_SP', '2_FIC_601_SP', '1_P_005_STATUS', '2_FIC_601_PV', '2_MV_601_STATUS', '2_FIC_301_PV', '3_AIT_003_PV', '2_FIC_601_CO', '2_FQ_501_PV', '2_FIC_401_PV', '2_LT_001_PV', '2_MV_401_STATUS', '2A_AIT_001_PV', '2_DPIT_001_PV', '2_FIC_501_CO', '2B_AIT_001_PV', '2_FIC_201_CO', '2_FQ_101_PV', '1_MV_003_STATUS', '2B_AIT_003_PV', '2_MV_003_STATUS', '2_PIT_002_PV', '2_FIC_301_CO', '2_MV_201_STATUS', '2B_AIT_002_PV', '1_AIT_001_PV', '2_P_003_STATUS', '2_MCV_501_CO', '2_FQ_201_PV', '2_FIC_201_PV', '1_P_003_STATUS', '3_AIT_004_PV', 'LEAK_DIFF_PRESSURE', '2B_AIT_004_PV', '2_FIT_001_PV', '2_MCV_101_CO', '2_FIC_301_SP', '2_FIC_101_PV', '2A_AIT_002_PV', '2_FIC_401_CO', '2_MCV_301_CO', '1_P_001_STATUS', '2_FIC_101_CO', '2_FIT_002_PV', '1_MV_001_STATUS', '3_AIT_002_PV', '2_MCV_601_CO', '2_MV_101_STATUS', '1_AIT_005_PV', '2_LT_002_PV', '2_PIC_003_PV', '2_PIC_003_CO', '2_MV_006_STATUS', '2_MV_501_STATUS', '2_FIC_201_SP', '1_AIT_004_PV', '2_P_003_SPEED', '2_PIT_003_PV', '2_FIC_501_PV', 'TOTAL_CONS_REQUIRED_FLOW', '3_FIT_001_PV', '1_FIT_001_PV', '2_FIC_501_SP', '2_FIT_003_PV', '2_MCV_201_CO', '1_P_006_STATUS', '2A_AIT_004_PV', '2_MCV_401_CO', '2_FIC_101_SP', '2A_AIT_003_PV', '2_P_004_SPEED', '2_FQ_601_PV', '2_FQ_301_PV', '2_FQ_401_PV', '1_AIT_003_PV', '3_LT_001_PV', '2_MV_301_STATUS', '2_MCV_007_CO', '1_MV_002_STATUS', '1_AIT_002_PV']
+
     def test_shapelets_in_col(self):
         '''
         columns '1_AIT_001_PV', '1_AIT_002_PV', '1_AIT_003_PV', '1_AIT_004_PV', '1_AIT_005_PV', '1_FIT_001_PV', '1_LS_001_AL',
@@ -194,7 +196,7 @@ class ShapeletsTestCase(unittest.TestCase):
         np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
         return all_multivariate_prepared_x, all_multivariate_y
 
-    def test_with_multivariate_and_save_transformed_2(self):
+    def test_discover_shapelets_configuration_3_win_500(self):
 
         conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3")
         conf.step = 250
@@ -214,7 +216,49 @@ class ShapeletsTestCase(unittest.TestCase):
         # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
 
-    def test_with_multivariate_train_test_classifier_with_transformed(self):
+    def test_discover_shapelets_configuration_4_win_250(self):
+
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_4_win_250")
+        conf.step = 125
+        conf.window_length = 250
+        conf.min_negative_last_chunk_size = 50
+        conf.step4negative = 3
+        conf.population_size = 5
+        conf.iterations = 10
+        conf.wait = 5
+        conf.normed = True
+        conf.update()
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+
+        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
+        # multi_var_shape_extractor.prepare_data(['2_FIC_401_CO', '2_PIC_003_CO'])
+        multi_var_shape_extractor.discover_shapelets()
+
+    def test_discover_shapelets_configuration_5_win_750(self):
+
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_5_win_750")
+        conf.step = 375
+        conf.window_length = 750
+        conf.min_negative_last_chunk_size = 50
+        conf.step4negative = 5
+        conf.population_size = 5
+        conf.iterations = 10
+        conf.wait = 5
+        conf.normed = True
+        conf.update()
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+
+        # multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
+        multi_var_shape_extractor.prepare_data(self.all_train_columns[0:20])
+        multi_var_shape_extractor.discover_shapelets()
+
+    def test_configuration_3_win_250(self):
 
         conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3")
         multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
@@ -222,14 +266,27 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet',
-                                                                           solver='saga', l1_ratio=0.1))
-
+        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet', solver='saga', l1_ratio=0.1), normalize_columns='max')
+        # from sklearn import svm
+        # multi_var_shape_extractor.train_test_classifier(svm.SVC(kernel='sigmoid'))
+        # multi_var_shape_extractor.train_test_classifier(svm.SVC(kernel='linear'))
+        # multi_var_shape_extractor.train_test_classifier(svm.SVC(kernel='poly'))
         # for i in range(20):
         #     l1_ratio = 0.05 + (i * 0.005)
         #     print('l1_ratio', l1_ratio)
         #     multi_var_shape_extractor.train_classifier(LogisticRegression(max_iter=1000, tol=1e-4,
         #                                                               penalty='elasticnet', solver='saga', l1_ratio=l1_ratio))
+
+    def test_configuration_4_win_250(self):
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_4_win_250")
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4 ), normalize_columns=None)
+        # multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet',
+        #                                                                    solver='saga', l1_ratio=0.75), normalize_columns=None)
+
 
     @classmethod
     def setUpClass(cls):
