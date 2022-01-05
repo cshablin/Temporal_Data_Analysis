@@ -8,8 +8,9 @@ import numpy as np
 from typing import Dict, Tuple, List, Any
 from gendis.genetic import GeneticExtractor
 from sklearn.base import BaseEstimator
+from sklearn.feature_selection import SelectFromModel
 from sklearn.preprocessing import normalize
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 
 from Common.data_preparation import split_time_series_with_labels, split_time_series_with_negative_labels
 from Exp_Shapelets.Config import ShapeletsConfig
@@ -90,6 +91,20 @@ class MultiVarShapeletsExtractor:
                 continue
             x_multi_var_distances_train = np.concatenate((x_multi_var_distances_train, distances_c_train), axis=1)
             x_multi_var_distances_test = np.concatenate((x_multi_var_distances_test, distances_c_test), axis=1)
+
+        # # replace outliers with median
+        # df = pd.DataFrame(x_multi_var_distances_train)
+        # for column in df.columns:
+        #     mean = df[column].mean()
+        #     std = df[column].std()
+        #     median = df[column].median()
+        #     q = df[column].quantile(0.90)
+        #     # outliers = (df[column] - mean).abs() > 3 * std
+        #     df[column] = df[column].mask((df[column] - mean).abs() > 3 * std, q)
+        #     # df[outliers] = np.nan
+        #     # df[column].fillna(median, inplace=True)
+        # x_multi_var_distances_train = df.values
+
         if normalize_columns is not None:
             x_multi_var_distances_train = normalize(x_multi_var_distances_train, axis=1, norm=normalize_columns)
         # Fit ML classifier on constructed (distance,location) matrix
@@ -97,6 +112,12 @@ class MultiVarShapeletsExtractor:
         self.__save_clf(clf, clf.__class__.__name__)
         # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
         print('report = \n{}'.format(classification_report(y_test, clf.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
+        print('confusion_matrix = \n{}'.format(confusion_matrix(y_test, clf.predict(x_multi_var_distances_test))))
+
+    def dim_reduction(self, clf):
+        model = SelectFromModel(clf, prefit=True)
+        x = self.__load('x_train.npy')
+        x_new = model.transform(x)
 
 
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,

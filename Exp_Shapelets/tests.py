@@ -7,6 +7,8 @@ import numpy
 import numpy as np
 import pandas as pd
 from gendis.genetic import GeneticExtractor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression
 from typing import List
@@ -254,11 +256,11 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        # multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
-        multi_var_shape_extractor.prepare_data(self.all_train_columns[0:20])
+        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
+        # multi_var_shape_extractor.prepare_data(self.all_train_columns[0:20])
         multi_var_shape_extractor.discover_shapelets()
 
-    def test_configuration_3_win_250(self):
+    def test_configuration_3_win_500(self):
 
         conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3")
         multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
@@ -284,9 +286,15 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
         multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4 ), normalize_columns=None)
-        # multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet',
-        #                                                                    solver='saga', l1_ratio=0.75), normalize_columns=None)
+        # multi_var_shape_extractor.train_test_classifier(RandomForestClassifier(max_depth=5, n_jobs=4, n_estimators=50), normalize_columns=None)
 
+    def test_configuration_5_win_750(self):
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_5_win_750")
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4 ), normalize_columns=None)
 
     @classmethod
     def setUpClass(cls):
