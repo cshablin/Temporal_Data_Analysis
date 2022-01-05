@@ -1,6 +1,7 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 import numpy as np
 
@@ -32,3 +33,16 @@ def get_logit_pipe_grid():
     }
 
     return GridSearchCV(logistic_pipe, param_grid = param_grid, cv=5, verbose=True, n_jobs=-1)
+
+
+def get_nn_pipe_grid():
+    pipe = Pipeline([
+        ('classifier', MLPClassifier(solver='adam',max_iter = 100, early_stopping=True,verbose=0, random_state=1))
+    ])
+    param_grid = {
+        'classifier__hidden_layer_sizes': [(8,),(16,),(32,),(64,),(8,8), (16,16)],
+        'classifier__alpha': np.logspace(-2, 0, 4),
+        'classifier__solver': ['adam','lbfgs'],
+    }
+
+    return GridSearchCV(pipe, param_grid,cv=5, verbose=0, n_jobs=-1)
