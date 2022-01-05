@@ -9,6 +9,7 @@ from typing import Dict, Tuple, List, Any
 from gendis.genetic import GeneticExtractor
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectFromModel
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import normalize
 from sklearn.metrics import classification_report, confusion_matrix
 
@@ -67,11 +68,32 @@ class MultiVarShapeletsExtractor:
         for th in self.shapelets_threads:
             th.start()
 
-    # this should be called after finished extracting shapelets for all columns
-    def train_test_classifier(self, clf, normalize_columns: str = None, columns: List[str] = None):
+    def train_test_classifier_grid_search(self, grid_search: GridSearchCV, normalize_columns: str = None):
         y_train = self.__load('y_train.npy')
         y_test = self.__load('y_test.npy')
+        x_multi_var_distances_train, x_multi_var_distances_test = self._concatenate_all_shapelets(normalize_columns)
+        best_clf_forest = grid_search.fit(x_multi_var_distances_train, y_train)
+        print("best parameters:", best_clf_forest.best_params_)
+        best_clf_forest.fit(x_multi_var_distances_train, y_train)
+        self.__save_clf(best_clf_forest, best_clf_forest.__class__.__name__)
+        # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
+        print('report = \n{}'.format(classification_report(y_test, best_clf_forest.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
+        print('confusion_matrix = \n{}'.format(confusion_matrix(y_test, best_clf_forest.predict(x_multi_var_distances_test))))
 
+
+    # this should be called after finished extracting shapelets for all columns
+    def train_test_classifier(self, clf, normalize_columns: str = None):
+        y_train = self.__load('y_train.npy')
+        y_test = self.__load('y_test.npy')
+        x_multi_var_distances_train, x_multi_var_distances_test = self._concatenate_all_shapelets(normalize_columns)
+        # Fit ML classifier on constructed (distance,location) matrix
+        clf.fit(x_multi_var_distances_train, y_train)
+        self.__save_clf(clf, clf.__class__.__name__)
+        # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
+        print('report = \n{}'.format(classification_report(y_test, clf.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
+        print('confusion_matrix = \n{}'.format(confusion_matrix(y_test, clf.predict(x_multi_var_distances_test))))
+
+    def _concatenate_all_shapelets(self, normalize_columns: str = None) -> Tuple[np.ndarray, np.ndarray]:
         ordered_columns = self.__load('columns.npy')
         x_multi_var_distances_train = None
         x_multi_var_distances_test = None
@@ -80,11 +102,6 @@ class MultiVarShapeletsExtractor:
             column_folder = self.config.test_folder + os.path.sep + col_str + os.path.sep
             distances_c_train = np.load(column_folder + 'distances_train.npy')
             distances_c_test = np.load(column_folder + 'distances_test.npy')
-            # genetic_extractor = GeneticExtractor.load(column_folder + 'model.p')
-            # column_slice_x = x_train[:, i_col, :]
-            # distances_c_train_ = genetic_extractor.transform(column_slice_x.T)  # shape (x_n_ts, window_length)
-            # distances_c_test = genetic_extractor.transform(x_test[:, i_col, :].T)  # shape (x_n_ts, window_length)
-            # assert distances_c_train_ == distances_c_train
             if i_col == 0:
                 x_multi_var_distances_train = distances_c_train
                 x_multi_var_distances_test = distances_c_test
@@ -107,12 +124,7 @@ class MultiVarShapeletsExtractor:
 
         if normalize_columns is not None:
             x_multi_var_distances_train = normalize(x_multi_var_distances_train, axis=1, norm=normalize_columns)
-        # Fit ML classifier on constructed (distance,location) matrix
-        clf.fit(x_multi_var_distances_train, y_train)
-        self.__save_clf(clf, clf.__class__.__name__)
-        # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
-        print('report = \n{}'.format(classification_report(y_test, clf.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
-        print('confusion_matrix = \n{}'.format(confusion_matrix(y_test, clf.predict(x_multi_var_distances_test))))
+        return x_multi_var_distances_train, x_multi_var_distances_test
 
     def dim_reduction(self, clf):
         model = SelectFromModel(clf, prefit=True)

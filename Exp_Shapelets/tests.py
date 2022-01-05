@@ -15,6 +15,7 @@ from typing import List
 from Common.data_preparation import split_time_series_data, split_time_series_with_labels, \
     split_time_series_with_negative_labels
 from Exp_Shapelets.Config import ShapeletsConfig
+from Exp_Shapelets.classifier_helper import get_forest_pipe_grid, get_logit_pipe_grid
 from Exp_Shapelets.discovery_of_shapelets import MultiVarShapeletsExtractor
 
 
@@ -268,11 +269,14 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
+        # multi_var_shape_extractor.train_test_classifier_grid_search(get_forest_pipe_grid())
+        # best parameters: {'classifier__C': 21.54434690031882, 'classifier__penalty': 'l1', 'classifier__solver': 'liblinear'}
+        # [[ 423  190]
+        #  [  60 1838]]
+        # multi_var_shape_extractor.train_test_classifier_grid_search(get_logit_pipe_grid())
+
         multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet', solver='saga', l1_ratio=0.1), normalize_columns='max')
-        # from sklearn import svm
-        # multi_var_shape_extractor.train_test_classifier(svm.SVC(kernel='sigmoid'))
-        # multi_var_shape_extractor.train_test_classifier(svm.SVC(kernel='linear'))
-        # multi_var_shape_extractor.train_test_classifier(svm.SVC(kernel='poly'))
+
         # for i in range(20):
         #     l1_ratio = 0.05 + (i * 0.005)
         #     print('l1_ratio', l1_ratio)
