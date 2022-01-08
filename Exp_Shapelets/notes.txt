@@ -1,3 +1,56 @@
 - noticed columns with higher std are much more effective for shapelets performance
   for example (same configuration 1000 window..) '1_AIT_001_PV' has 18.66 std achieved ~ 70% acc, '1_AIT_002_PV' has 0.35 std achieved ~ 62% acc
   so for feature selection we could discard columns with low std
+
+Experiments:
+
+test_configuration_5_win_750
+    LR
+    best parameters: {'classifier__C': 21.54434690031882, 'classifier__penalty': 'l1', 'classifier__solver': 'liblinear'}
+        report =
+                      precision    recall  f1-score   support
+
+              attack       0.87      0.70      0.77       608
+              normal       0.87      0.95      0.91      1265
+
+            accuracy                           0.87      1873
+           macro avg       0.87      0.82      0.84      1873
+        weighted avg       0.87      0.87      0.86      1873
+
+        confusion_matrix =
+        [[ 425  183]
+         [  64 1201]]
+
+    NN
+    best parameters: {'classifier__alpha': 0.01, 'classifier__batch_size': 128, 'classifier__early_stopping': True, 'classifier__hidden_layer_sizes': (64, 32, 16, 8), 'classifier__learning_rate': 'adaptive', 'classifier__solver': 'adam'}
+        report =
+                      precision    recall  f1-score   support
+
+              attack       0.71      1.00      0.83       608
+              normal       1.00      0.80      0.89      1265
+
+            accuracy                           0.86      1873
+           macro avg       0.85      0.90      0.86      1873
+        weighted avg       0.90      0.86      0.87      1873
+
+        confusion_matrix =
+        [[ 608    0]
+         [ 254 1011]]
+
+
+test_configuration_3_win_500
+    LR
+    best parameters: {'classifier__C': 21.54434690031882, 'classifier__penalty': 'l1', 'classifier__solver': 'liblinear'}
+    report =
+                  precision    recall  f1-score   support
+
+          attack       0.88      0.69      0.77       613
+          normal       0.91      0.97      0.94      1898
+
+        accuracy                           0.90      2511
+       macro avg       0.89      0.83      0.85      2511
+    weighted avg       0.90      0.90      0.90      2511
+
+    confusion_matrix =
+    [[ 423  190]
+     [  60 1838]]
