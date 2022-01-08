@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectFromModel
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import normalize
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, precision_recall_curve, roc_curve
 
 from Common.data_preparation import split_time_series_with_labels, split_time_series_with_negative_labels
 from Exp_Shapelets.Config import ShapeletsConfig
@@ -77,9 +77,10 @@ class MultiVarShapeletsExtractor:
         best_clf_forest.fit(x_multi_var_distances_train, y_train)
         self.__save_clf(best_clf_forest, best_clf_forest.__class__.__name__)
         # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
-        print('report = \n{}'.format(classification_report(y_test, best_clf_forest.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
-        print('confusion_matrix = \n{}'.format(confusion_matrix(y_test, best_clf_forest.predict(x_multi_var_distances_test))))
-
+        predicted = best_clf_forest.predict(x_multi_var_distances_test)
+        print('report = \n{}'.format(classification_report(y_test, predicted, target_names=['attack', 'normal'])))
+        print('confusion_matrix = \n{} \n'.format(confusion_matrix(y_test, predicted)))
+        self.__calc_best_threshold_f1(best_clf_forest, x_multi_var_distances_test, y_test)
 
     # this should be called after finished extracting shapelets for all columns
     def train_test_classifier(self, clf, normalize_columns: str = None):
@@ -92,6 +93,7 @@ class MultiVarShapeletsExtractor:
         # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
         print('report = \n{}'.format(classification_report(y_test, clf.predict(x_multi_var_distances_test), target_names=['attack', 'normal'])))
         print('confusion_matrix = \n{}'.format(confusion_matrix(y_test, clf.predict(x_multi_var_distances_test))))
+        self.__calc_best_threshold_f1(clf, x_multi_var_distances_test, y_test)
 
     def _concatenate_all_shapelets(self, normalize_columns: str = None) -> Tuple[np.ndarray, np.ndarray]:
         ordered_columns = self.__load('columns.npy')
@@ -125,6 +127,38 @@ class MultiVarShapeletsExtractor:
         if normalize_columns is not None:
             x_multi_var_distances_train = normalize(x_multi_var_distances_train, axis=1, norm=normalize_columns)
         return x_multi_var_distances_train, x_multi_var_distances_test
+
+    def __calc_best_threshold_f1(self, clf, x_test, y_test):
+        # predict probabilities
+        yhat = clf.predict_proba(x_test)
+        # keep probabilities for the positive outcome only
+        yhat = yhat[:, 0]
+        # # calculate roc curves
+        # precision, recall, thresholds = precision_recall_curve(y_test, yhat)
+        # # convert to f score
+        # fscore = (2 * precision * recall) / (precision + recall)
+        # # locate the index of the largest f score
+        # ix = np.argmax(fscore)
+        # print('Best Threshold=%f, F-Score=%.3f, precision=%f, recall=%.3f' % (thresholds[ix], fscore[ix], precision[ix], recall[ix]))
+        fpr, tpr, thresholds = roc_curve(y_test, yhat)
+        # calculate the g-mean for each threshold
+        # gmeans = np.sqrt(tpr * (1-fpr))
+        # locate the index of the largest g-mean
+        # ix = np.argmax(gmeans)
+
+        fscore = tpr / (tpr + 0.5 * (fpr + (1-tpr)))
+        ix = np.argmax(fscore)
+        print('Best Threshold=%f, F1-Score=%.3f, tpr=%f, fpr=%.3f' % (thresholds[ix], fscore[ix], tpr[ix], fpr[ix]))
+        # from matplotlib import pyplot
+        # pyplot.plot([0,1], [0,1], linestyle='--', label='No Skill')
+        # pyplot.plot(fpr, tpr, marker='.', label='Logistic')
+        # pyplot.scatter(fpr[ix], tpr[ix], marker='o', color='black', label='Best')
+        # # axis labels
+        # pyplot.xlabel('False Positive Rate')
+        # pyplot.ylabel('True Positive Rate')
+        # pyplot.legend()
+        # # show the plot
+        # pyplot.show()
 
     def dim_reduction(self, clf):
         model = SelectFromModel(clf, prefit=True)
