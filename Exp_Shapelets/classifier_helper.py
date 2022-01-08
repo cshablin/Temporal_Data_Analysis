@@ -40,9 +40,11 @@ def get_nn_pipe_grid():
         ('classifier', MLPClassifier(solver='adam',max_iter = 100, early_stopping=True,verbose=0, random_state=1))
     ])
     param_grid = {
-        'classifier__hidden_layer_sizes': [(8,),(16,),(32,),(64,),(8,8), (16,16)],
-        'classifier__alpha': np.logspace(-2, 0, 4),
-        'classifier__solver': ['adam','lbfgs'],
+        'classifier__hidden_layer_sizes': [(64,32,16,8)], # (64,),(8,8) BEST (64,16)
+        'classifier__alpha': np.logspace(-2, -0.1, 4),
+        'classifier__solver': ['adam'], # ,'lbfgs', 'sgd'
+        'classifier__batch_size': [128],
+        'classifier__early_stopping': [True], #  False
+        'classifier__learning_rate': ['adaptive'], # 'invscaling', 'constant','adaptive'
     }
-
-    return GridSearchCV(pipe, param_grid,cv=5, verbose=0, n_jobs=-1)
+    return GridSearchCV(pipe, param_grid, cv=5, verbose=0, n_jobs=-1)
