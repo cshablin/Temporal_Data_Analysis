@@ -10,7 +10,7 @@ test_configuration_5_win_750
         report =
                       precision    recall  f1-score   support
 
-              attack       0.87      0.70      0.77       608
+              attack       0.88      0.69      0.77       608
               normal       0.87      0.95      0.91      1265
 
             accuracy                           0.87      1873
@@ -18,8 +18,8 @@ test_configuration_5_win_750
         weighted avg       0.87      0.87      0.86      1873
 
         confusion_matrix =
-        [[ 425  183]
-         [  64 1201]]
+        [[ 421  187]
+         [  60 1205]]
 
     NN
     best parameters: {'classifier__alpha': 0.01, 'classifier__batch_size': 128, 'classifier__early_stopping': True, 'classifier__hidden_layer_sizes': (64, 32, 16, 8), 'classifier__learning_rate': 'adaptive', 'classifier__solver': 'adam'}
@@ -41,16 +41,16 @@ test_configuration_5_win_750
 test_configuration_3_win_500
     LR
     best parameters: {'classifier__C': 21.54434690031882, 'classifier__penalty': 'l1', 'classifier__solver': 'liblinear'}
-    report =
-                  precision    recall  f1-score   support
+        report =
+                      precision    recall  f1-score   support
 
-          attack       0.88      0.69      0.77       613
-          normal       0.91      0.97      0.94      1898
+              attack       0.88      0.71      0.79       613
+              normal       0.91      0.97      0.94      1898
 
-        accuracy                           0.90      2511
-       macro avg       0.89      0.83      0.85      2511
-    weighted avg       0.90      0.90      0.90      2511
+            accuracy                           0.91      2511
+           macro avg       0.90      0.84      0.86      2511
+        weighted avg       0.90      0.91      0.90      2511
 
-    confusion_matrix =
-    [[ 423  190]
-     [  60 1838]]
+        confusion_matrix =
+        [[ 434  179]
+         [  58 1840]]
