@@ -7,15 +7,12 @@ import numpy
 import numpy as np
 import pandas as pd
 from gendis.genetic import GeneticExtractor
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression
 from typing import List
 from Common.data_preparation import split_time_series_data, split_time_series_with_labels, \
     split_time_series_with_negative_labels
 from Exp_Shapelets.Config import ShapeletsConfig
-from Exp_Shapelets.classifier_helper import get_forest_pipe_grid, get_logit_pipe_grid, get_nn_pipe_grid
 from Exp_Shapelets.discovery_of_shapelets import MultiVarShapeletsExtractor
 
 
@@ -92,6 +89,39 @@ class ShapeletsTestCase(unittest.TestCase):
             print(str(datetime.datetime.now()) + ' lr.fit')
             print(str(datetime.datetime.now()) + ' Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
 
+    @ignore_warnings
+    def test_with_multivariate_and_save_transformed(self):
+        columns = ['1_AIT_001_PV', '1_AIT_002_PV']
+        step = 500
+        window_length = 1000
+        step4negative = 5
+        min_negative_last_chunk_size = 100
+        x_train, y_train = self.__prepare_x_y_data(self.normal_labels_train_df, self.mixed_labels_train_df,
+                                                   columns, step, window_length, step4negative, min_negative_last_chunk_size)
+        x_test, y_test = self.__prepare_x_y_data(self.normal_labels_test_df, self.mixed_labels_test_df,
+                                                 columns, step, window_length, step4negative, min_negative_last_chunk_size)
+        for i in range(len(columns)):
+            print(str(datetime.datetime.now()) + " start GENDIS for column '{0}'".format(columns[i]))
+            x_c_train, x_c_test = x_train[:, i, :].T, x_test[:, i, :].T  # shape (x_n_ts, window_length)
+            # Fit the GeneticExtractor and construct distance matrix
+            genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
+                                                 mutation_prob=0.3, crossover_prob=0.3,
+                                                 wait=5, max_len=len(x_c_train) // 2)
+
+            genetic_extractor.fit(x_c_train, y_train)
+            print(str(datetime.datetime.now()) + ' shapelets ')
+            print(str(datetime.datetime.now()) + ' shapelets # ' + str(len(genetic_extractor.shapelets)) + ' shape ' + str(genetic_extractor.shapelets[0].shape))
+            distances_train = genetic_extractor.transform(x_c_train)
+            print(str(datetime.datetime.now()) + ' distances_train')
+            distances_test = genetic_extractor.transform(x_c_test)
+            print(str(datetime.datetime.now()) + ' distances_test')
+
+            # Fit ML classifier on constructed distance matrix
+            lr = LogisticRegression()
+            lr.fit(distances_train, y_train)
+            print(str(datetime.datetime.now()) + ' lr.fit')
+            print(str(datetime.datetime.now()) + ' Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
+
     def test_random_shapelets(self):
         from tslearn.generators import random_walk_blobs
         from sklearn.linear_model import LogisticRegression
@@ -140,39 +170,6 @@ class ShapeletsTestCase(unittest.TestCase):
         y_test = all_y_split_arr[1]
         return x_train, x_test, y_train, y_test
 
-    @ignore_warnings
-    def test_with_multivariate_and_save_transformed(self):
-        columns = ['1_AIT_001_PV', '1_AIT_002_PV']
-        step = 500
-        window_length = 1000
-        step4negative = 5
-        min_negative_last_chunk_size = 100
-        x_train, y_train = self.__prepare_x_y_data(self.normal_labels_train_df, self.mixed_labels_train_df,
-                                                   columns, step, window_length, step4negative, min_negative_last_chunk_size)
-        x_test, y_test = self.__prepare_x_y_data(self.normal_labels_test_df, self.mixed_labels_test_df,
-                                                 columns, step, window_length, step4negative, min_negative_last_chunk_size)
-        for i in range(len(columns)):
-            print(str(datetime.datetime.now()) + " start GENDIS for column '{0}'".format(columns[i]))
-            x_c_train, x_c_test = x_train[:, i, :].T, x_test[:, i, :].T  # shape (x_n_ts, window_length)
-            # Fit the GeneticExtractor and construct distance matrix
-            genetic_extractor = GeneticExtractor(population_size=5, iterations=10, verbose=True, n_jobs=1,
-                                                 mutation_prob=0.3, crossover_prob=0.3,
-                                                 wait=5, max_len=len(x_c_train) // 2)
-
-            genetic_extractor.fit(x_c_train, y_train)
-            print(str(datetime.datetime.now()) + ' shapelets ')
-            print(str(datetime.datetime.now()) + ' shapelets # ' + str(len(genetic_extractor.shapelets)) + ' shape ' + str(genetic_extractor.shapelets[0].shape))
-            distances_train = genetic_extractor.transform(x_c_train)
-            print(str(datetime.datetime.now()) + ' distances_train')
-            distances_test = genetic_extractor.transform(x_c_test)
-            print(str(datetime.datetime.now()) + ' distances_test')
-
-            # Fit ML classifier on constructed distance matrix
-            lr = LogisticRegression()
-            lr.fit(distances_train, y_train)
-            print(str(datetime.datetime.now()) + ' lr.fit')
-            print(str(datetime.datetime.now()) + ' Accuracy = {}'.format(accuracy_score(y_test, lr.predict(distances_test))))
-
     def __prepare_x_y_data(self, normal_df: pd.DataFrame, mixed_df: pd.DataFrame,
                            columns: List[str], step: int = 500, time_window: int = 1000,
                            step4negative: int = 5, min_negative_last_chunk_size: int = 20):
@@ -219,6 +216,26 @@ class ShapeletsTestCase(unittest.TestCase):
         # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
 
+    def test_discover_shapelets_configuration_3_win_500_25(self):
+
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3_win_500_25")
+        conf.step = 250
+        conf.window_length = 500
+        conf.min_negative_last_chunk_size = 25
+        conf.population_size = 5
+        conf.iterations = 10
+        conf.wait = 5
+        conf.normed = True
+        conf.update()
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+
+        multi_var_shape_extractor.prepare_data(self.all_train_columns[61:71])
+        # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
+        multi_var_shape_extractor.discover_shapelets()
+
     def test_discover_shapelets_configuration_4_win_250(self):
 
         conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_4_win_250")
@@ -259,6 +276,27 @@ class ShapeletsTestCase(unittest.TestCase):
 
         multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
         # multi_var_shape_extractor.prepare_data(self.all_train_columns[0:20])
+        multi_var_shape_extractor.discover_shapelets()
+
+    def test_discover_shapelets_configuration_5_win_750_25(self):
+
+        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_5_win_750_25")
+        conf.step = 375
+        conf.window_length = 750
+        conf.min_negative_last_chunk_size = 25
+        conf.step4negative = 5
+        conf.population_size = 5
+        conf.iterations = 10
+        conf.wait = 5
+        conf.normed = True
+        conf.update()
+        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
+                                                               self.mixed_labels_train_df,
+                                                               self.normal_labels_test_df,
+                                                               self.mixed_labels_test_df)
+
+        multi_var_shape_extractor.prepare_data(['1_AIT_002_PV', '2_FQ_401_PV'])
+        # multi_var_shape_extractor.prepare_data(self.all_train_columns)
         multi_var_shape_extractor.discover_shapelets()
 
     def test_discover_shapelets_configuration_6_win_100_25(self):
@@ -303,7 +341,7 @@ class ShapeletsTestCase(unittest.TestCase):
         multi_var_shape_extractor.prepare_data(self.all_train_columns[0:63])
         multi_var_shape_extractor.discover_shapelets()
 
-    def test_discover_shapelets_configuration_7_win_250_25(self):
+    def test_discover_shapelets_configuration_4_win_250_25(self):
 
         conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_4_win_250_25")
         conf.step = 125
@@ -320,54 +358,9 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(['2A_AIT_003_PV', '2_FIC_401_CO', '3_FIT_001_PV', '2B_AIT_003_PV','1_AIT_002_PV'])
-        # multi_var_shape_extractor.prepare_data(self.all_train_columns)
+        #multi_var_shape_extractor.prepare_data(['2A_AIT_003_PV', '2_FIC_401_CO', '3_FIT_001_PV', '2B_AIT_003_PV','1_AIT_002_PV'])
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         multi_var_shape_extractor.discover_shapelets()
-
-    def test_configuration_3_win_500(self):
-
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_3_win_500")
-        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
-                                                               self.mixed_labels_train_df,
-                                                               self.normal_labels_test_df,
-                                                               self.mixed_labels_test_df)
-
-        # multi_var_shape_extractor.train_test_classifier_grid_search(get_forest_pipe_grid())
-        # best parameters: {'classifier__C': 21.54434690031882, 'classifier__penalty': 'l1', 'classifier__solver': 'liblinear'}
-        # [[ 423  190]
-        #  [  60 1838]]
-        # multi_var_shape_extractor.train_test_classifier_grid_search(get_logit_pipe_grid())
-
-        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4, penalty='elasticnet', solver='saga', l1_ratio=0.1), normalize_columns='max')
-
-
-    def test_configuration_4_win_250(self):
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_4_win_250")
-        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
-                                                               self.mixed_labels_train_df,
-                                                               self.normal_labels_test_df,
-                                                               self.mixed_labels_test_df)
-        multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4 ), normalize_columns=None)
-        # multi_var_shape_extractor.train_test_classifier(RandomForestClassifier(max_depth=5, n_jobs=4, n_estimators=50), normalize_columns=None)
-
-    def test_configuration_5_win_750(self):
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_5_win_750")
-        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
-                                                               self.mixed_labels_train_df,
-                                                               self.normal_labels_test_df,
-                                                               self.mixed_labels_test_df)
-        # multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4 ), normalize_columns=None)
-        # multi_var_shape_extractor.train_test_classifier_grid_search(get_nn_pipe_grid(), normalize_columns=None)
-        multi_var_shape_extractor.train_test_classifier_grid_search(get_logit_pipe_grid(), normalize_columns=None)
-
-    def test_configuration_6_win_100_25(self):
-        conf = ShapeletsConfig(os.getcwd() + os.path.sep + "test_configuration_6_win_100_25")
-        multi_var_shape_extractor = MultiVarShapeletsExtractor(conf, self.normal_labels_train_df,
-                                                               self.mixed_labels_train_df,
-                                                               self.normal_labels_test_df,
-                                                               self.mixed_labels_test_df)
-        # multi_var_shape_extractor.train_test_classifier(LogisticRegression(max_iter=1000, tol=1e-4 ), normalize_columns=None)
-        multi_var_shape_extractor.train_test_classifier_grid_search(get_forest_pipe_grid(), normalize_columns=None)
 
     @classmethod
     def setUpClass(cls):
