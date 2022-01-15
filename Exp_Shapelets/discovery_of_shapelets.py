@@ -68,19 +68,26 @@ class MultiVarShapeletsExtractor:
         for th in self.shapelets_threads:
             th.start()
 
-    def train_test_classifier_grid_search(self, grid_search: GridSearchCV, normalize_columns: str = None):
+    def train_test_classifier_grid_search(self, grid_search: GridSearchCV, normalize_columns: str = None) -> str:
+        result = ''
         y_train = self.__load('y_train.npy')
         y_test = self.__load('y_test.npy')
         x_multi_var_distances_train, x_multi_var_distances_test = self._concatenate_all_shapelets(normalize_columns)
         best_clf_forest = grid_search.fit(x_multi_var_distances_train, y_train)
+        result += str(best_clf_forest.best_params_) + '\n'
         print("best parameters:", best_clf_forest.best_params_)
         best_clf_forest.fit(x_multi_var_distances_train, y_train)
         self.__save_clf(best_clf_forest, best_clf_forest.__class__.__name__)
         # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
         predicted = best_clf_forest.predict(x_multi_var_distances_test)
-        print('report = \n{}'.format(classification_report(y_test, predicted, target_names=['attack', 'normal'])))
-        print('confusion_matrix = \n{} \n'.format(confusion_matrix(y_test, predicted)))
-        self.__calc_best_threshold_f1(best_clf_forest, x_multi_var_distances_test, y_test)
+        rep = classification_report(y_test, predicted, target_names=['attack', 'normal'])
+        result += str(rep) + '\n'
+        print('report = \n{}'.format(rep))
+        conf_matrix = confusion_matrix(y_test, predicted)
+        result += str(conf_matrix) + '\n'
+        print('confusion_matrix = \n{} \n'.format(conf_matrix))
+        # self.__calc_best_threshold_f1(best_clf_forest, x_multi_var_distances_test, y_test)
+        return result
 
     # this should be called after finished extracting shapelets for all columns
     def train_test_classifier(self, clf, normalize_columns: str = None):
