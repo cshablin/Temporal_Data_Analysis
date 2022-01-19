@@ -88,6 +88,6 @@ path_to_shapelets = '..\\test_configuration_3_win_500'
 clf_path = 'GridSearchCV_best_lg_86.joblib'
 input_df = pd.read_csv('NewShapeletsDemoTest.csv')
 training_clf_df = pd.read_csv('training_lg_clf_df.csv')
-df, predicted, actual = evaluate(input_df.head(851), path_to_shapelets, clf_path, training_clf_df, step, window)
+df, predicted, actual = evaluate(input_df, path_to_shapelets, clf_path, training_clf_df, step, window)
 
 
