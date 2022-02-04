@@ -82,12 +82,16 @@ def evaluate(tested_df: pd.DataFrame, shapelets_folder: str, clf_path: str, trai
     return pd.DataFrame(data=x_multi_var_distances_test, columns=list(training_clf_df.columns)), list(predicted), list(y)
 
 
-step = 50
+step = 25
 window = 750
 path_to_shapelets = '..\\test_configuration_3_win_500'
 clf_path = 'GridSearchCV_best_lg_86.joblib'
 input_df = pd.read_csv('NewShapeletsDemoTest.csv')
 training_clf_df = pd.read_csv('training_lg_clf_df.csv')
-df, predicted, actual = evaluate(input_df, path_to_shapelets, clf_path, training_clf_df, step, window)
+df, predicted, actual = evaluate(input_df, path_to_shapelets, clf_path, training_clf_df, step, window) # input_df[880:1635]
 
+df.to_csv("demoDF.csv", index = False)
+pred_actual = {"predicted":predicted, "actual":actual}
+outdf = pd.DataFrame.from_dict(pred_actual)
+outdf.to_csv("pred_and_actual.csv", index = False)
 
