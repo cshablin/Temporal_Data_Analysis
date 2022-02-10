@@ -43,8 +43,7 @@ class MultiVarShapeletsExtractor:
         min_negative_last_chunk_size = self.config.min_negative_last_chunk_size
         x_train, y_train = self.__prepare_x_y_data(self.normal_labels_train_df, self.mixed_labels_train_df,
                                                    columns, step, window_length, step4negative, min_negative_last_chunk_size)
-        x_test, y_test = self.__prepare_x_y_data(self.normal_labels_test_df, self.mixed_labels_test_df,
-                                                 columns, step, window_length, step4negative, min_negative_last_chunk_size)
+        x_test, y_test = self.__prepare_x_y_test_data(self.mixed_labels_test_df, columns, 10, window_length)
         self.__save(np.array(columns), 'columns.npy')
         self.__save(x_train, 'x_train.npy')
         self.__save(y_train, 'y_train.npy')
@@ -110,7 +109,7 @@ class MultiVarShapeletsExtractor:
             col_str = ordered_columns[i_col]
             column_folder = self.config.test_folder + os.path.sep + col_str + os.path.sep
             distances_c_train = np.load(column_folder + 'distances_train.npy')
-            distances_c_test = np.load(column_folder + 'distances_test.npy')
+            distances_c_test = np.load(column_folder + 'distances_test_full.npy')
             if i_col == 0:
                 x_multi_var_distances_train = distances_c_train
                 x_multi_var_distances_test = distances_c_test
@@ -199,6 +198,13 @@ class MultiVarShapeletsExtractor:
         np.take(all_multivariate_y, permutation, axis=0, out=all_multivariate_y)
         return all_multivariate_prepared_x, all_multivariate_y
 
+    def __prepare_x_y_test_data(self, mixed_df: pd.DataFrame, columns: List[str], step: int = 2, time_window: int = 750):
+        mixed_label_multivariate_split_data, mixed_y = split_time_series_with_labels(mixed_df[columns],
+                                                                                     mixed_df['Attack LABLE (1:No Attack, -1:Attack)'].values,
+                                                                                     step, time_window)
+
+        return mixed_label_multivariate_split_data, mixed_y
+
     def __save_clf(self, clf: BaseEstimator, name: str):
         from joblib import dump, load
         file_path = self.config.test_folder + os.path.sep + name + '.joblib'
@@ -242,7 +248,7 @@ class UniVarShapeletsExtractor(Thread):
         distances_train = genetic_extractor.transform(x_c_train)
         np.save(col_folder + os.path.sep + 'distances_train', distances_train)
         distances_test = genetic_extractor.transform(x_c_test)
-        np.save(col_folder + os.path.sep + 'distances_test', distances_test)
+        np.save(col_folder + os.path.sep + 'distances_test_full', distances_test)
         genetic_extractor.save(col_folder + os.path.sep + 'model.p')
         # new_extractor = GeneticExtractor.load('temp.p')
 
