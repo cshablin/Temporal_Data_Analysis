@@ -67,25 +67,26 @@ class MultiVarShapeletsExtractor:
         for th in self.shapelets_threads:
             th.start()
 
-    def train_test_classifier_grid_search(self, grid_search: GridSearchCV, normalize_columns: str = None) -> str:
+    def train_test_classifier_grid_search(self, grid_search: GridSearchCV, normalize_columns: str = None, test_anomaly_ratio = 0.0577) -> str:
         result = ''
         y_train = self.__load('y_train.npy')
         y_test = self.__load('y_test.npy')
         x_multi_var_distances_train, x_multi_var_distances_test = self._concatenate_all_shapelets(normalize_columns)
-        best_clf_forest = grid_search.fit(x_multi_var_distances_train, y_train)
-        result += str(best_clf_forest.best_params_) + '\n'
-        print("best parameters:", best_clf_forest.best_params_)
-        best_clf_forest.fit(x_multi_var_distances_train, y_train)
-        self.__save_clf(best_clf_forest, best_clf_forest.__class__.__name__)
+        x_multi_var_distances_test, y_test = self.adjust(test_anomaly_ratio, x_multi_var_distances_test, y_test)
+        best_grid_clf = grid_search.fit(x_multi_var_distances_train, y_train)
+        result += str(best_grid_clf.best_params_) + '\n'
+        print("best parameters:", best_grid_clf.best_params_)
+        # best_grid_clf.fit(x_multi_var_distances_train, y_train)
+        self.__save_clf(best_grid_clf.best_estimator_, best_grid_clf.best_estimator_.__class__.__name__) # best_grid_clf.best_estimator_.named_steps.classifier
         # print('Accuracy = {}'.format(accuracy_score(y_test, clf.predict(x_multi_var_distances_test))))
-        predicted = best_clf_forest.predict(x_multi_var_distances_test)
+        predicted = best_grid_clf.predict(x_multi_var_distances_test)
         rep = classification_report(y_test, predicted, target_names=['attack', 'normal'])
         result += str(rep) + '\n'
         print('report = \n{}'.format(rep))
         conf_matrix = confusion_matrix(y_test, predicted)
         result += str(conf_matrix) + '\n'
         print('confusion_matrix = \n{} \n'.format(conf_matrix))
-        # self.__calc_best_threshold_f1(best_clf_forest, x_multi_var_distances_test, y_test)
+        # self.__calc_best_threshold_f1(best_grid_clf, x_multi_var_distances_test, y_test)
         return result
 
     # this should be called after finished extracting shapelets for all columns
@@ -209,6 +210,16 @@ class MultiVarShapeletsExtractor:
         from joblib import dump, load
         file_path = self.config.test_folder + os.path.sep + name + '.joblib'
         dump(clf, file_path)
+
+    def adjust(self, test_anomaly_ratio, x_multi_var_distances_test, y_test):
+        normal_pos = np.where(y_test == 1)[0]
+        anomaly_pos = np.where(y_test == -1)[0]
+        normal_to_reduce = int(len(anomaly_pos) + len(normal_pos) - (len(anomaly_pos) / test_anomaly_ratio))
+        indexes = np.random.choice(normal_pos.shape[0], normal_to_reduce, replace=False)
+        ind = normal_pos[indexes]
+        reduced_x = np.delete(x_multi_var_distances_test, ind, axis=0)
+        reduced_y = np.delete(y_test, ind, axis=0)
+        return reduced_x, reduced_y
 
 
 class UniVarShapeletsExtractor(Thread):
