@@ -5,7 +5,7 @@ import pandas as pd
 
 from Exp_Shapelets.Config import ShapeletsConfig
 from Exp_Shapelets.classifier_helper import get_logit_pipe_grid, get_nn_pipe_grid, get_forest_pipe_grid, \
-    get_svm_pipe_grid, get_gb_pipe_grid, get_knn_pipe_grid, get_ada_boost_pipe_grid
+    get_svm_pipe_grid, get_gb_pipe_grid, get_knn_pipe_grid, get_ada_boost_pipe_grid, get_xgb_pipe_grid
 from Exp_Shapelets.discovery_of_shapelets import MultiVarShapeletsExtractor
 
 
@@ -46,6 +46,11 @@ class ClassifierTestCase(unittest.TestCase):
         report = multi_var_shape_extractor.train_test_classifier_grid_search(get_gb_pipe_grid())
         self.__write_report('TestReports' + os.path.sep + 'GB_' + conf_test + '.txt', report)
 
+    def __run_xgb(self, conf_test):
+        multi_var_shape_extractor = self.__get_shape_extractor(conf_test)
+        report = multi_var_shape_extractor.train_test_classifier_grid_search(get_xgb_pipe_grid())
+        self.__write_report('TestReports' + os.path.sep + 'XGB_' + conf_test + '.txt', report)
+
     def __run_ada_b(self, conf_test):
         multi_var_shape_extractor = self.__get_shape_extractor(conf_test)
         report = multi_var_shape_extractor.train_test_classifier_grid_search(get_ada_boost_pipe_grid())
@@ -70,10 +75,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_3_win_500(self):
         conf_test = "test_configuration_3_win_500"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -81,10 +87,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_3_win_500_25(self):
         conf_test = "test_configuration_3_win_500_25"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -93,10 +100,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_4_win_250(self):
         conf_test = "test_configuration_4_win_250"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -105,10 +113,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_4_win_250_25(self):
         conf_test = "test_configuration_4_win_250_25"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -117,10 +126,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_5_win_750(self):
         conf_test = "test_configuration_5_win_750"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -129,10 +139,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_5_win_750_25(self):
         conf_test = "test_configuration_5_win_750_25"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -141,10 +152,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_6_win_100(self):
         conf_test = "test_configuration_6_win_100"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 
@@ -153,10 +165,11 @@ class ClassifierTestCase(unittest.TestCase):
     def test_configuration_6_win_100_25(self):
         conf_test = "test_configuration_6_win_100_25"
         # self.__run_lg(conf_test)
-        self.__run_nn(conf_test)
+        # self.__run_nn(conf_test)
         # self.__run_svm(conf_test)
         # self.__run_ada_b(conf_test)
         # self.__run_gb(conf_test)
+        self.__run_xgb(conf_test)
         # self.__run_knn(conf_test)
         # self.__run_forest(conf_test)
 

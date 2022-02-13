@@ -212,7 +212,7 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
 
@@ -232,7 +232,7 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(self.all_train_columns[61:71])
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         # multi_var_shape_extractor.prepare_data(['2_FIC_201_CO', '2_MCV_201_CO','2B_AIT_002_PV', '2A_AIT_001_PV','3_AIT_004_PV','2_PIC_003_PV'])
         multi_var_shape_extractor.discover_shapelets()
 
@@ -253,7 +253,7 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         # multi_var_shape_extractor.prepare_data(['2_FIC_401_CO', '2_PIC_003_CO'])
         multi_var_shape_extractor.discover_shapelets()
 
@@ -274,7 +274,7 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(list(self.mixed_labels_train_df.columns))
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         # multi_var_shape_extractor.prepare_data(self.all_train_columns[0:20])
         multi_var_shape_extractor.discover_shapelets()
 
@@ -295,7 +295,7 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(['1_AIT_002_PV', '2_FQ_401_PV'])
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         # multi_var_shape_extractor.prepare_data(self.all_train_columns)
         multi_var_shape_extractor.discover_shapelets()
 
@@ -337,8 +337,8 @@ class ShapeletsTestCase(unittest.TestCase):
                                                                self.normal_labels_test_df,
                                                                self.mixed_labels_test_df)
 
-        multi_var_shape_extractor.prepare_data(['2B_AIT_003_PV', '2_FIC_401_CO'])
-        multi_var_shape_extractor.prepare_data(self.all_train_columns[0:63])
+        # multi_var_shape_extractor.prepare_data(['2B_AIT_003_PV', '2_FIC_401_CO'])
+        multi_var_shape_extractor.prepare_data(self.all_train_columns)
         multi_var_shape_extractor.discover_shapelets()
 
     def test_discover_shapelets_configuration_4_win_250_25(self):

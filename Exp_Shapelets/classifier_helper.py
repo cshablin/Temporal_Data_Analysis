@@ -4,13 +4,16 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.metrics import f1_score, make_scorer, recall_score
 import numpy as np
 from sklearn.svm import SVC
+from xgboost import XGBClassifier
 
 random_state = 10
 
-f1 = make_scorer(f1_score, average='macro')
+# f1 = make_scorer(f1_score, average='macro')
+f1 = make_scorer(f1_score, average='binary')
+# f1 = make_scorer(recall_score, average='binary')
 
 
 def get_forest_pipe_grid() -> GridSearchCV:
@@ -19,9 +22,9 @@ def get_forest_pipe_grid() -> GridSearchCV:
     ])
 
     param_grid ={
-        'classifier__n_estimators' : list(range(50,101,10)),
-        'classifier__max_features' : [0.05, 0.1, 'auto'],
-        'classifier__max_depth' : list(range(5, 7, 1)),
+        'classifier__n_estimators' : list(range(50, 101, 10)),
+        'classifier__max_features' : [0.15, 0.2, 0.25], # 0.05, 0.1,
+        'classifier__max_depth' : list(range(5, 8, 1)),
     }
 
     return GridSearchCV(forest_pipe, param_grid=param_grid, cv=5, verbose=True, n_jobs=-1, scoring=f1)
@@ -34,7 +37,7 @@ def get_logit_pipe_grid():
 
     param_grid ={
         'classifier__penalty' : ['l1', 'l2'], # , 'elasticnet'
-        'classifier__C' : np.logspace(-4, 4, 10)[2:7],
+        'classifier__C' : np.logspace(-4, 4, 10)[2:9],
         'classifier__solver' : ['lbfgs', 'liblinear'], # , 'saga'
         # 'classifier__l1_ratio' : [None, 0.1],
     }
@@ -46,6 +49,7 @@ def get_nn_pipe_grid():
     pipe = Pipeline([
         ('classifier', MLPClassifier(solver='adam',max_iter = 100, early_stopping=True,verbose=0, random_state=random_state))
     ])
+    # par = {'classifier__alpha': [0.0005], 'classifier__batch_size': [128], 'classifier__early_stopping': [True], 'classifier__hidden_layer_sizes': [(64, 32, 16, 8)], 'classifier__learning_rate': ['adaptive'], 'classifier__solver': ['adam']}
     param_grid = {
         'classifier__hidden_layer_sizes': [(64,32,16,8)], # (64,),(8,8) BEST (64,32,16,8)
         'classifier__alpha': [0.0001, 0.0005, 0.002],  # np.logspace(-4, -2, 4)
@@ -59,28 +63,18 @@ def get_nn_pipe_grid():
 
 def get_svm_pipe_grid():
     tuned_parameters = [
-        # {"kernel": ["rbf"], "gamma": [1e-3, 1e-4, 'scale'], "C": [1, 10, 100, 1000]}, # , 'auto'
-        # {"kernel": ["linear"], "C": [1, 10, 100, 1000]},
-        {"kernel": ["poly"], "C": [10, 100, 1000], 'degree': [2, 3], "gamma": [1e-3, 1e-4, 'scale']}, # 10, 100, 1000
+        {"kernel": ["rbf"], "gamma": [  0.001, 0.0001], "C": [ 1000], 'max_iter': [1000]}, # , 'auto'
+        # {"kernel": ["linear"], "C": [0.1, 1, 10, 100, 1000], 'max_iter': [1000]},
+        # {"kernel": ["poly"], "C": [0.1, 1, 10, 100, 1000], 'degree': [2, 3], "gamma": [1, 0.1, 0.01, 0.001, 0.0001], 'max_iter': [1000]}, # 10, 100, 1000
+        # {"kernel": ["poly"], "C": [10, 100], 'degree': [2], "gamma": ['scale'], 'max_iter': [100]}, # 10, 100, 1000
         # {"kernel": ["poly"], "C": [100, 1000], 'degree': [3,4], "gamma": ['scale']}, # 10, 100, 1000
     ]
-    # return GridSearchCV(SVC(probability=True,random_state=random_state), tuned_parameters, cv=5, verbose=0, n_jobs=-1, scoring=f1)
-    return RandomizedSearchCV(SVC(probability=True,random_state=random_state), tuned_parameters, random_state=random_state, cv=None, verbose=0, n_jobs=-1, scoring=f1)
+    return GridSearchCV(SVC(probability=True, random_state=random_state), tuned_parameters, cv=None, verbose=0, n_jobs=-1, scoring=f1)
+    # return RandomizedSearchCV(SVC(probability=True,random_state=random_state), tuned_parameters, random_state=random_state, cv=5, verbose=0, n_jobs=-1, scoring=f1)
 
 
 def get_gb_pipe_grid():
     tuned_parameters = [
-        # {
-        #     "loss":["deviance"],
-        #     "learning_rate": [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2],
-        #     "min_samples_split": np.linspace(0.1, 0.5, 12),
-        #     "min_samples_leaf": np.linspace(0.1, 0.5, 12),
-        #     "max_depth":[3,5,8],
-        #     "max_features":["log2","sqrt"],
-        #     "criterion": ["friedman_mse",  "mae"],
-        #     "subsample":[0.5, 0.618, 0.8, 0.85, 0.9, 0.95, 1.0],
-        #     "n_estimators":[10]
-        # },
         {
             "loss":["deviance"],
             "learning_rate": [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2],
@@ -90,22 +84,37 @@ def get_gb_pipe_grid():
             "max_features":["log2","sqrt"],
             "criterion": ["friedman_mse",  "mae"],
             "subsample":[0.5, 0.618, 0.8, 0.85, 0.9, 0.95, 1.0],
-            "n_estimators":[50]
+            "n_estimators":[11]
         },
         # {
         #     "loss":["deviance"],
-        #     "learning_rate": [0.01, 0.05, 0.075, 0.1, 0.2],
-        #     "min_samples_split": np.linspace(0.1, 0.5, 6),
-        #     "min_samples_leaf": np.linspace(0.1, 0.5, 6),
-        #     "max_depth":[5,7,8],
+        #     "learning_rate": [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2],
+        #     "min_samples_split": np.linspace(0.1, 0.5, 12),
+        #     "min_samples_leaf": np.linspace(0.1, 0.5, 12),
+        #     "max_depth":[3,5,8],
         #     "max_features":["log2","sqrt"],
-        #     "criterion": ["friedman_mse"],
-        #     "subsample":[0.5, 0.8, 1.0],
-        #     "n_estimators":[10]
+        #     "criterion": ["friedman_mse",  "mae"],
+        #     "subsample":[0.5, 0.618, 0.8, 0.85, 0.9, 0.95, 1.0],
+        #     "n_estimators":[50]
         # },
     ]
-    return RandomizedSearchCV(GradientBoostingClassifier(random_state=random_state), tuned_parameters, random_state=random_state, cv=None, verbose=0, n_jobs=-1, scoring=f1)
+    return RandomizedSearchCV(GradientBoostingClassifier(random_state=random_state), tuned_parameters, random_state=random_state, cv=5, verbose=0, n_jobs=-1, scoring=f1)
     # return GridSearchCV(GradientBoostingClassifier(random_state=random_state), tuned_parameters, cv=None, verbose=0, n_jobs=-1, scoring=f1)
+
+
+def get_xgb_pipe_grid():
+    tuned_parameters = {
+        # 'learning_rate': [0.01, 0.02, 0.005],
+        'min_child_weight': [1, 5, 10],
+        'gamma': [0.5, 1, 1.5, 2, 5],
+        'subsample': [0.6, 0.8, 1.0],
+        'colsample_bytree': [0.6, 0.8, 1.0],
+        'max_depth': [3, 4, 5]
+    }
+    folds = 3
+    param_comb = 20
+    xgb = XGBClassifier(learning_rate=0.02, n_estimators=600, objective='binary:logistic', silent=True, nthread=1, random_state=random_state)
+    return RandomizedSearchCV(xgb, param_distributions=tuned_parameters, n_iter=param_comb, scoring=f1, n_jobs=-1, cv=folds, verbose=3, random_state=random_state )
 
 
 def get_knn_pipe_grid():
