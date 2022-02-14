@@ -108,6 +108,52 @@ class ShapeletsAnalysisTest(unittest.TestCase):
                    title='Minimum trailing\nsuccessive attack\nin positive samples') # labels=['25 sec', '50 sec'], labelcolor=['green', 'red']
         plt.show()
 
+    def test_plot_feature_importance(self):
+        xgb_path = 'test_configuration_6_win_100//XGBClassifier_0.64.joblib'
+        from joblib import load
+        xgb = load(xgb_path)
+        importance = xgb.feature_importances_
+        # summarize feature importance
+        # for i,v in enumerate(importance):
+        #     print('Feature: %0d, Score: %.5f' % (i,v))
+        # plot feature importance
+        # plt.bar([x for x in range(len(importance))], importance, log=True)
+        fig, ax = plt.subplots()
+        ax.bar([x for x in range(len(importance))], importance, log=True, ec="k",)# align="edge"
+        ax.set(ylabel="coefficient", xlabel='Feature', title='Localized Shapelets Feature importance in XGBoost')
+        plt.show()
+
+    def test_feature_importance_prepare_reduced(self):
+        xgb_path = 'test_configuration_6_win_100//XGBClassifier_0.64.joblib'
+        from joblib import load
+        xgb = load(xgb_path)
+        importance = xgb.feature_importances_
+
+
+        shapelet_df = pd.read_csv('num_of_shapelets.csv') # (labor_df['State and area']=='Hawaii') | (labor_df['State and area']=='Maryland')
+        shapelet_df = shapelet_df[shapelet_df['trailing_negatives']==50]
+        shapelet_df = shapelet_df[shapelet_df['window']==100]
+
+        week_columns = []
+        col_index = 0
+        last_coef_index = 0
+        for col_num_of_shapes in shapelet_df['num_of_shapelets']:
+            col_important = False
+            for i in range(col_num_of_shapes * 2):  # distance + location
+                coef = importance[last_coef_index + i]
+                if coef > 0.0001:
+                    col_important = True
+                    break
+            if not col_important:
+                week_columns.append(col_index)
+            last_coef_index += col_num_of_shapes * 2
+            col_index += 1
+
+        columns_names = np.load('test_configuration_6_win_100' + os.path.sep + 'columns.npy')
+        week_columns_names = np.take(columns_names, week_columns, axis=0)
+        strong_columns_names = set(list(columns_names)) - set(list(week_columns_names))
+        np.save('filtered_columns.npy', np.array(list(strong_columns_names)))
+
 
 if __name__ == '__main__':
     unittest.main()
