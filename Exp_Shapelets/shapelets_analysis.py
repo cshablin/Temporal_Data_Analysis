@@ -120,7 +120,12 @@ class ShapeletsAnalysisTest(unittest.TestCase):
         # plt.bar([x for x in range(len(importance))], importance, log=True)
         fig, ax = plt.subplots()
         ax.bar([x for x in range(len(importance))], importance, log=True, ec="k",)# align="edge"
-        ax.set(ylabel="coefficient", xlabel='Feature', title='Localized Shapelets Feature importance in XGBoost')
+        # ax.set(ylabel="coefficient", xlabel='Feature', title='Localized Shapelets Feature importance in XGBoost')
+        plt.xticks(fontsize= 15)
+        plt.yticks(fontsize= 15)
+        fig.suptitle('Localized Shapelets Feature importance in XGBoost', fontsize=20)
+        plt.xlabel('Feature', fontsize=18)
+        plt.ylabel('coefficient', fontsize=18)
         plt.show()
 
     def test_feature_importance_prepare_reduced(self):
