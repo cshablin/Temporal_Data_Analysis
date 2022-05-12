@@ -109,10 +109,13 @@ def get_xgb_pipe_grid():
         'gamma': [0.5, 1, 1.5, 2, 5],
         'subsample': [0.6, 0.8, 1.0],
         'colsample_bytree': [0.6, 0.8, 1.0],
-        'max_depth': [3, 4, 5]
+        'max_depth': [4, 5, 6]
     }
+    tuned_parameters = {'subsample': [0.9, 1.0], 'min_child_weight': [0.9, 1, 1.1], 'max_depth': [5,6], 'gamma': [0.8, 1, 1.2], 'colsample_bytree': [0.5, 0.6, 0.7]}
+    # tuned_parameters = {'subsample': [0.9, 1.0, 1.1], 'min_child_weight': [4, 5, 6], 'max_depth': [5, 6], 'gamma': [1.5], 'colsample_bytree': [0.8]}
     folds = 3
-    param_comb = 20
+    param_comb = 108  # 20
+    np.random.seed(random_state)
     xgb = XGBClassifier(learning_rate=0.02, n_estimators=600, objective='binary:logistic', silent=True, nthread=1, random_state=random_state)
     return RandomizedSearchCV(xgb, param_distributions=tuned_parameters, n_iter=param_comb, scoring=f1, n_jobs=-1, cv=folds, verbose=3, random_state=random_state )
 

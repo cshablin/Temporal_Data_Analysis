@@ -66,7 +66,12 @@ class ShapeletsAnalysisTest(unittest.TestCase):
                                                                                                                                             "markerfacecolor":"white",
                                                                                                                                             "markeredgecolor":"black",
                                                                                                                                             "markersize":"5"})
-        ax.set(ylabel="# shapelets", xlabel='sliding window size', title='Number of discovered shapelets during training')
+        # ax.set(ylabel="# shapelets", xlabel='sliding window size', title='Number of discovered shapelets during training')
+        plt.xticks(fontsize= 16)
+        plt.yticks(fontsize= 16)
+        plt.suptitle('Number of discovered shapelets during training', fontsize=18)
+        plt.xlabel('sliding window size', fontsize=17)
+        plt.ylabel('# shapelets', fontsize=17)
         plt.legend(loc='upper left', title='Minimum trailing\nsuccessive attack\nin positive samples')
         plt.show()
 
@@ -95,7 +100,12 @@ class ShapeletsAnalysisTest(unittest.TestCase):
         #                  palette=palette, data=df)
         # ax = sns.catplot(x="day", y="total_bill", hue="sex", kind="swarm", data=
 
-        ax.set(ylabel="shapelet length", xlabel='sliding window size', title='Discovered shapelets lengths during training')
+        # ax.set(ylabel="shapelet length", xlabel='sliding window size', title='Discovered shapelets lengths during training')
+        plt.xticks(fontsize= 16)
+        plt.yticks(fontsize= 16)
+        plt.suptitle('Discovered shapelets lengths during training', fontsize=18)
+        plt.xlabel('sliding window size', fontsize=17)
+        plt.ylabel('shapelet length', fontsize=17)
 
         # Get the handles and labels. For this example it'll be 2 tuples
         # of length 4 each.
@@ -121,11 +131,11 @@ class ShapeletsAnalysisTest(unittest.TestCase):
         fig, ax = plt.subplots()
         ax.bar([x for x in range(len(importance))], importance, log=True, ec="k",)# align="edge"
         # ax.set(ylabel="coefficient", xlabel='Feature', title='Localized Shapelets Feature importance in XGBoost')
-        plt.xticks(fontsize= 15)
-        plt.yticks(fontsize= 15)
-        fig.suptitle('Localized Shapelets Feature importance in XGBoost', fontsize=20)
-        plt.xlabel('Feature', fontsize=18)
-        plt.ylabel('coefficient', fontsize=18)
+        plt.xticks(fontsize= 20)
+        plt.yticks(fontsize= 20)
+        fig.suptitle('Localized Shapelets Feature importance in XGBoost', fontsize=25)
+        plt.xlabel('Feature', fontsize=23)
+        plt.ylabel('coefficient', fontsize=23)
         plt.show()
 
     def test_feature_importance_prepare_reduced(self):

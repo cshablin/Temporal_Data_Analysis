@@ -103,6 +103,7 @@ class MultiVarShapeletsExtractor:
         self.__calc_best_threshold_f1(clf, x_multi_var_distances_test, y_test)
 
     def _concatenate_all_shapelets(self, normalize_columns: str = None) -> Tuple[np.ndarray, np.ndarray]:
+        # ordered_columns = self.__load('filtered_16_columns.npy')
         ordered_columns = self.__load('columns.npy')
         x_multi_var_distances_train = None
         x_multi_var_distances_test = None
